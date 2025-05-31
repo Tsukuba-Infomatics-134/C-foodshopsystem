@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>注文一覧表示</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        display: flex;
+        flex-direction: row;
+        padding: 40px;
+        gap: 40px;
+        background: #fff;
+      }
+
+      .table-section {
+        flex: 2;
+      }
+
+      .summary-section {
+        flex: 1;
+        font-size: 2rem;
+        font-weight: bold;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+      }
+
+      th,
+      td {
+        border: 2px solid black;
+        padding: 10px;
+      }
+
+      th {
+        background-color: #ffe66d;
+      }
+
+      .status-called {
+        background-color: #ff7c7c;
+        color: white;
+        font-weight: bold;
+      }
+
+      .status-ordered {
+        background-color: white;
+        font-weight: bold;
+      }
+
+      .summary-item {
+        margin-bottom: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 左側：テーブル -->
+    <div class="table-section">
+      <h1>4組</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>番号</th>
+            <th>注文日時</th>
+            <th>プレーン</th>
+            <th>マンゴー</th>
+            <th>状態<br />（注文済み/呼び出し済み）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>??/?? ??:??</td>
+            <td>1</td>
+            <td>3</td>
+            <td class="status-called">呼び出し済み</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>??/?? ??:??</td>
+            <td>3</td>
+            <td>0</td>
+            <td class="status-called">呼び出し済み</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>??/?? ??:??</td>
+            <td>1</td>
+            <td>0</td>
+            <td class="status-called">呼び出し済み</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>??/?? ??:??</td>
+            <td>2</td>
+            <td>4</td>
+            <td class="status-called">呼び出し済み</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>??/?? ??:??</td>
+            <td>1</td>
+            <td>1</td>
+            <td class="status-ordered">注文済み</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>??/?? ??:??</td>
+            <td>2</td>
+            <td>2</td>
+            <td class="status-ordered">注文済み</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>??/?? ??:??</td>
+            <td>4</td>
+            <td>0</td>
+            <td class="status-ordered">注文済み</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>??/?? ??:??</td>
+            <td>0</td>
+            <td>1</td>
+            <td class="status-ordered">注文済み</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>??/?? ??:??</td>
+            <td>2</td>
+            <td>1</td>
+            <td class="status-ordered">注文済み</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 右側：集計 -->
+    <div class="summary-section">
+      <div class="summary-item">プレーン<br />7個</div>
+      <div class="summary-item">マンゴー<br />7個</div>
+    </div>
+  </body>
+</html>
