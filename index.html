@@ -11,13 +11,13 @@
       margin-right: auto;
     }
     th, td {
-      border: 1px solid #999;
+      border: 3px solid #000000;
       padding: 8px 12px;
       text-align: center;
       white-space: nowrap;
     }
     th {
-      background-color: #f0f0f0;
+      background-color: #ffde59;
     }
   </style>
   <h2>1組</h2>
@@ -75,31 +75,32 @@
       const orders = data[0];
 
       Object.keys(orders).forEach(orderNo => {
-	const order = orders[orderNo];
+        const order = orders[orderNo];
         const row = tbody.insertRow();
 
-	const cellNo = row.insertCell();
-	cellNo.textContent = orderNo;
-	
-	const cellTime = row.insertCell();
-	const date = new Date(order.ordered_at);
-	cellTime.textContent = date.toLocaleTimeString();
+        const cellNo = row.insertCell();
+        cellNo.textContent = orderNo;
+        
+        const cellTime = row.insertCell();
+        const date = new Date(order.ordered_at);
+        cellTime.textContent = date.toLocaleTimeString();
 
-	const cellOne = row.insertCell();
-	cellOne.textContent = order.order_item["プレーン"];
+        const cellOne = row.insertCell();
+        cellOne.textContent = order.order_item["プレーン"];
 
-	const cellTwo = row.insertCell();
-	cellTwo.textContent = order.order_item["マンゴー"];
+        const cellTwo = row.insertCell();
+        cellTwo.textContent = order.order_item["マンゴー"];
 
-	const cellStatus = row.insertCell();
-	cellStatus.textContent = order.status;
+        const cellStatus = row.insertCell();
+        cellStatus.textContent = order.status;
 
-	if (order.status === "注文済み"){
-	 cellStatus.style.backgroundColor = "white";
-	} else if (order.status === "支払い済み"){
-	 cellStatus.style.backgroundColor = "red";
-	 cellStatus.style.color = "white";
-	}
+        if (order.status === "注文済み"){
+          cellStatus.style.backgroundColor = "white";
+        } 
+        else if (order.status === "支払い済み"){
+          cellStatus.style.backgroundColor = "#ff5757";
+          cellStatus.style.color = "white";
+        }
 	
 	
        });
