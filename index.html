@@ -1,152 +1,115 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>注文一覧表示</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        display: flex;
-        flex-direction: row;
-        padding: 40px;
-        gap: 40px;
-        background: #f0f;
-      }
+<head>
+  <meta charset="UTF-8">
+  <title>1組調理室表示機</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 50%;
+      margin-left: 10px;
+      margin-right: auto;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 8px 12px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+  <h2>1組</h2>
+</head>
 
-      .table-section {
-        flex: 2;
-      }
 
-      .summary-section {
-        flex: 1;
-        font-size: 2rem;
-        font-weight: bold;
-      }
+<body>
 
-      h1 {
-        font-size: 1.5rem;
-        margin-bottom: 20px;
-      }
+  <h2 style="text-align: left;">注文一覧</h2>
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: center;
-      }
+  <div id="table-container"></div>
 
-      th,
-      td {
-        border: 2px solid black;
-        padding: 10px;
-      }
+  <script>
+    const jsonData = [
+     {
+      1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 2, "マンゴー": 1 }, status: "支払い済み" },
+      2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 0, "マンゴー": 3 }, status: "注文済み" },
+      3: { ordered_at: Date.now() - 3400000, order_item: { "プレーン": 1, "マンゴー": 0 }, status: "支払い済み" },
+      4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 4, "マンゴー": 2 }, status: "注文済み" },
+      5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 3, "マンゴー": 3 }, status: "支払い済み" },
+      6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 0, "マンゴー": 1 }, status: "注文済み" },
+      7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 2, "マンゴー": 0 }, status: "支払い済み" },
+      8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 1, "マンゴー": 2 }, status: "注文済み" },
+      9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 0, "マンゴー": 4 }, status: "支払い済み" },
+      10: { ordered_at: Date.now() - 2700000, order_item: { "プレーン": 5, "マンゴー": 1 }, status: "注文済み" },
+      11: { ordered_at: Date.now() - 2600000, order_item: { "プレーン": 3, "マンゴー": 0 }, status: "支払い済み" },
+      12: { ordered_at: Date.now() - 2500000, order_item: { "プレーン": 0, "マンゴー": 3 }, status: "注文済み" },
+      13: { ordered_at: Date.now() - 2400000, order_item: { "プレーン": 2, "マンゴー": 2 }, status: "支払い済み" },
+      14: { ordered_at: Date.now() - 2300000, order_item: { "プレーン": 1, "マンゴー": 1 }, status: "注文済み" },
+      15: { ordered_at: Date.now() - 2200000, order_item: { "プレーン": 0, "マンゴー": 0 }, status: "キャンセル" },
+      16: { ordered_at: Date.now() - 2100000, order_item: { "プレーン": 4, "マンゴー": 2 }, status: "支払い済み" },
+      17: { ordered_at: Date.now() - 2000000, order_item: { "プレーン": 3, "マンゴー": 1 }, status: "注文済み" },
+      18: { ordered_at: Date.now() - 1900000, order_item: { "プレーン": 2, "マンゴー": 3 }, status: "支払い済み" },
+      19: { ordered_at: Date.now() - 1800000, order_item: { "プレーン": 1, "マンゴー": 0 }, status: "注文済み" },
+      20: { ordered_at: Date.now() - 1700000, order_item: { "プレーン": 0, "マンゴー": 5 }, status: "支払い済み" }
+     }
+    ];
 
-      th {
-        background-color: #ffe66d;
-      }
 
-      .status-called {
-        background-color: #ff7c7c;
-        color: white;
-        font-weight: bold;
-      }
+    function createOrderTable(data) {
+      const table = document.createElement("table");
 
-      .status-ordered {
-        background-color: white;
-        font-weight: bold;
-      }
+      const headers = ["注文番号","注文時刻","プレーン","マンゴー","ステータス"];
 
-      .summary-item {
-        margin-bottom: 30px;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- 左側：テーブル -->
-    <div class="table-section">
-      <h1>4組</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>番号</th>
-            <th>注文日時</th>
-            <th>プレーン</th>
-            <th>マンゴー</th>
-            <th>状態<br />（注文済み/呼び出し済み）</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>??/?? ??:??</td>
-            <td>1</td>
-            <td>3</td>
-            <td class="status-called">呼び出し済み</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>??/?? ??:??</td>
-            <td>3</td>
-            <td>0</td>
-            <td class="status-called">呼び出し済み</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>??/?? ??:??</td>
-            <td>1</td>
-            <td>0</td>
-            <td class="status-called">呼び出し済み</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>??/?? ??:??</td>
-            <td>2</td>
-            <td>4</td>
-            <td class="status-called">呼び出し済み</td>
-          </tr>
-          <tr>
-            <td>5</td>
-            <td>??/?? ??:??</td>
-            <td>1</td>
-            <td>1</td>
-            <td class="status-ordered">注文済み</td>
-          </tr>
-          <tr>
-            <td>6</td>
-            <td>??/?? ??:??</td>
-            <td>2</td>
-            <td>2</td>
-            <td class="status-ordered">注文済み</td>
-          </tr>
-          <tr>
-            <td>7</td>
-            <td>??/?? ??:??</td>
-            <td>4</td>
-            <td>0</td>
-            <td class="status-ordered">注文済み</td>
-          </tr>
-          <tr>
-            <td>8</td>
-            <td>??/?? ??:??</td>
-            <td>0</td>
-            <td>1</td>
-            <td class="status-ordered">注文済み</td>
-          </tr>
-          <tr>
-            <td>9</td>
-            <td>??/?? ??:??</td>
-            <td>2</td>
-            <td>1</td>
-            <td class="status-ordered">注文済み</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      const thead = table.createTHead();
+      const headerRow = thead.insertRow();
+      
+      headers.forEach(headerText => {
+        const th = document.createElement("th");
+        th.textContent = headerText;
+        headerRow.appendChild(th);
+      });
 
-    <!-- 右側：集計 -->
-    <div class="summary-section">
-      <div class="summary-item">プレーン<br />7個</div>
-      <div class="summary-item">マンゴー<br />7個</div>
-    </div>
-  </body>
+      const tbody = table.createTBody();
+      const orders = data[0];
+
+      Object.keys(orders).forEach(orderNo => {
+	const order = orders[orderNo];
+        const row = tbody.insertRow();
+
+	const cellNo = row.insertCell();
+	cellNo.textContent = orderNo;
+	
+	const cellTime = row.insertCell();
+	const date = new Date(order.ordered_at);
+	cellTime.textContent = date.toLocaleTimeString();
+
+	const cellOne = row.insertCell();
+	cellOne.textContent = order.order_item["プレーン"];
+
+	const cellTwo = row.insertCell();
+	cellTwo.textContent = order.order_item["マンゴー"];
+
+	const cellStatus = row.insertCell();
+	cellStatus.textContent = order.status;
+
+	if (order.status === "注文済み"){
+	 cellStatus.style.backgroundColor = "white";
+	} else if (order.status === "支払い済み"){
+	 cellStatus.style.backgroundColor = "red";
+	 cellStatus.style.color = "white";
+	}
+	
+	
+       });
+
+      return table;
+    }
+
+    const container = document.getElementById("table-container");
+    container.appendChild(createOrderTable(jsonData));
+  </script>
+
+</body>
 </html>
