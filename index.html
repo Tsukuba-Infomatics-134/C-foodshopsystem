@@ -5,26 +5,37 @@
   <meta charset="UTF-8">
   <title>2組調理室表示機</title>
   <style>
+    
     body {
       background-color: #fff;
       font-family: sans-serif;
     }
 
+    th {
+      border: none;
+      padding: 20px 30px;
+      border-radius: 20px;
+      text-align: center;
+      font-size: 18px;
+      /*min-width: 70px;*/
+      background-color: #ff6b6b;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
     .id-cell, .time-cell {
+      text-align: center;
       font-size: 12px;
-      padding: 5px;
-      min-width: 30px;
+      max-width: 30px;
+      width: 15px;
+      padding: 10px 10px;
+      border-radius: 20px;
       background-color: #008b94;
       color: black;
     }
 
-    table {
-      border-collapse: separate;
-      border-spacing: 10px;
-      margin: auto;
-    }
-
-    td {
+    .taste-cell, .tastetaste-cell {
       border: none;
       padding: 10px 10px;
       border-radius: 20px;
@@ -33,18 +44,13 @@
       min-width: 70px;
     }
 
-    th {
-      border: none;
-      padding: 30px 30px;
-      border-radius: 20px;
-      text-align: center;
-      font-size: 18px;
-      min-width: 70px;
-      background-color: #ff6b6b;
-      color: white;
-      font-weight: bold;
-      font-size: 20px;
+    table {
+      border-collapse: separate;
+      border-spacing: 10px;
+      margin: auto;
     }
+
+
 
     .paid {
       background-color: #ff6b6b;
@@ -96,13 +102,6 @@
         headerRow.appendChild(th);
       });
 
-      const cellId = row.insertCell();
-      cellId.textContent = orderNo;
-      cellId.className = `${statusClass} id-cell`;
-
-      const cellTime = row.insertCell();
-      cellTime.textContent = new Date(order.ordered_at).toLocaleTimeString();
-      cellTime.className = `${statusClass} time-cell`;
 
 
 
@@ -133,15 +132,15 @@
           cellTime.className = `${statusClass} time-cell`;
 
 
-          const cellPlain = row.insertCell();
-          const valPlain = order.order_item["プレーン"];
-          cellPlain.textContent = valPlain;
-          cellPlain.className = valPlain === 0 ? "zero" : "paid";
+          const celltaste = row.insertCell();
+          const valtaste = order.order_item["プレーン"];
+          celltaste.textContent = valtaste;
+          celltaste.className = `${valtaste === 0 ? "zero" : "paid"} taste-cell`;
 
-          const cellCheese = row.insertCell();
-          const valCheese = order.order_item["チーズ"];
-          cellCheese.textContent = valCheese;
-          cellCheese.className = valCheese === 0 ? "zero" : "paid";
+          const celltastetaste = row.insertCell();
+          const valtastetaste = order.order_item["チーズ"];
+          celltastetaste.textContent = valtastetaste;
+          celltastetaste.className = `${valtastetaste === 0 ? "zero" : "paid"} tastetaste-cell`;
         });
 
       return table;
@@ -150,6 +149,7 @@
     const container = document.getElementById("table-container");
     container.appendChild(createOrderTable(jsonData));
   </script>
+
 
 </body>
 </html>
