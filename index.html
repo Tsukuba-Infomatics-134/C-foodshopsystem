@@ -1,109 +1,148 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>1組調理室表示機</title>
+  <title>2組調理室表示機</title>
   <style>
+    body {
+      background-color: #fff;
+      font-family: sans-serif;
+    }
+
+    .id-cell, .time-cell {
+      font-size: 12px;
+      padding: 5px;
+      min-width: 30px;
+      background-color: #008b94;
+      color: black;
+    }
+
     table {
-      border-collapse: collapse;
-      width: 50%;
-      margin-left: 10px;
-      margin-right: auto;
+      border-collapse: separate;
+      border-spacing: 10px;
+      margin: auto;
     }
-    th, td {
-      border: 3px solid #000000;
-      padding: 8px 12px;
+
+    td {
+      border: none;
+      padding: 10px 10px;
+      border-radius: 20px;
       text-align: center;
-      white-space: nowrap;
+      font-size: 18px;
+      min-width: 70px;
     }
+
     th {
-      background-color: #ffde59;
+      border: none;
+      padding: 30px 30px;
+      border-radius: 20px;
+      text-align: center;
+      font-size: 18px;
+      min-width: 70px;
+      background-color: #ff6b6b;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .paid {
+      background-color: #ff6b6b;
+      color: white;
+    }
+
+    .ordered {
+      background-color: #008b94;
+      color: white;
+    }
+
+    .zero {
+      background-color: white;
+      border: 2px solid #ff6b6b;
+      color: black;
     }
   </style>
-  <h2>1組</h2>
 </head>
-
-
 <body>
 
   <h2 style="text-align: left;">注文一覧</h2>
-
   <div id="table-container"></div>
 
   <script>
     const jsonData = [
      {
-      1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 2, "マンゴー": 1 }, status: "支払い済み" },
-      2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 0, "マンゴー": 3 }, status: "注文済み" },
-      3: { ordered_at: Date.now() - 3400000, order_item: { "プレーン": 1, "マンゴー": 0 }, status: "支払い済み" },
-      4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 4, "マンゴー": 2 }, status: "注文済み" },
-      5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 3, "マンゴー": 3 }, status: "支払い済み" },
-      6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 0, "マンゴー": 1 }, status: "注文済み" },
-      7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 2, "マンゴー": 0 }, status: "支払い済み" },
-      8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 1, "マンゴー": 2 }, status: "注文済み" },
-      9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 0, "マンゴー": 4 }, status: "支払い済み" },
-      10: { ordered_at: Date.now() - 2700000, order_item: { "プレーン": 5, "マンゴー": 1 }, status: "注文済み" },
-      11: { ordered_at: Date.now() - 2600000, order_item: { "プレーン": 3, "マンゴー": 0 }, status: "支払い済み" },
-      12: { ordered_at: Date.now() - 2500000, order_item: { "プレーン": 0, "マンゴー": 3 }, status: "注文済み" },
-      13: { ordered_at: Date.now() - 2400000, order_item: { "プレーン": 2, "マンゴー": 2 }, status: "支払い済み" },
-      14: { ordered_at: Date.now() - 2300000, order_item: { "プレーン": 1, "マンゴー": 1 }, status: "注文済み" },
-      15: { ordered_at: Date.now() - 2200000, order_item: { "プレーン": 0, "マンゴー": 0 }, status: "キャンセル" },
-      16: { ordered_at: Date.now() - 2100000, order_item: { "プレーン": 4, "マンゴー": 2 }, status: "支払い済み" },
-      17: { ordered_at: Date.now() - 2000000, order_item: { "プレーン": 3, "マンゴー": 1 }, status: "注文済み" },
-      18: { ordered_at: Date.now() - 1900000, order_item: { "プレーン": 2, "マンゴー": 3 }, status: "支払い済み" },
-      19: { ordered_at: Date.now() - 1800000, order_item: { "プレーン": 1, "マンゴー": 0 }, status: "注文済み" },
-      20: { ordered_at: Date.now() - 1700000, order_item: { "プレーン": 0, "マンゴー": 5 }, status: "支払い済み" }
+      1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 2, "チーズ": 1 }, status: "支払い済み" },
+      2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 0, "チーズ": 3 }, status: "注文済み" },
+      3: { ordered_at: Date.now() - 3400000, order_item: { "プレーン": 1, "チーズ": 0 }, status: "支払い済み" },
+      4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 4, "チーズ": 2 }, status: "注文済み" },
+      5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 3, "チーズ": 3 }, status: "支払い済み" },
+      6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 0, "チーズ": 1 }, status: "注文済み" },
+      7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 2, "チーズ": 0 }, status: "支払い済み" },
+      8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 1, "チーズ": 2 }, status: "注文済み" },
+      9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 0, "チーズ": 4 }, status: "支払い済み" },
+      10: { ordered_at: Date.now() - 2700000, order_item: { "プレーン": 5, "チーズ": 1 }, status: "注文済み" }
      }
     ];
 
-
     function createOrderTable(data) {
       const table = document.createElement("table");
-
-      const headers = ["注文番号","注文時刻","プレーン","マンゴー","ステータス"];
-
+      const headers = ["ID", "時間", "プレーン", "チーズ"];
       const thead = table.createTHead();
       const headerRow = thead.insertRow();
-      
-      headers.forEach(headerText => {
+
+      headers.forEach(text => {
         const th = document.createElement("th");
-        th.textContent = headerText;
+        th.textContent = text;
         headerRow.appendChild(th);
       });
+
+      const cellId = row.insertCell();
+      cellId.textContent = orderNo;
+      cellId.className = `${statusClass} id-cell`;
+
+      const cellTime = row.insertCell();
+      cellTime.textContent = new Date(order.ordered_at).toLocaleTimeString();
+      cellTime.className = `${statusClass} time-cell`;
+
+
+
 
       const tbody = table.createTBody();
       const orders = data[0];
 
-      Object.keys(orders).forEach(orderNo => {
-        const order = orders[orderNo];
-        const row = tbody.insertRow();
+      Object.keys(orders)
+        .sort((a, b) => {
+          const statusA = orders[a].status;
+          const statusB = orders[b].status;
+          if (statusA === "支払い済み" && statusB !== "支払い済み") return -1;
+          if (statusA !== "支払い済み" && statusB === "支払い済み") return 1;
+          return a - b;
+        })
+        .forEach(orderNo => {
+          const order = orders[orderNo];
+          const row = tbody.insertRow();
 
-        const cellNo = row.insertCell();
-        cellNo.textContent = orderNo;
-        
-        const cellTime = row.insertCell();
-        const date = new Date(order.ordered_at);
-        cellTime.textContent = date.toLocaleTimeString();
+          const statusClass = order.status === "支払い済み" ? "paid" : "ordered";
 
-        const cellOne = row.insertCell();
-        cellOne.textContent = order.order_item["プレーン"];
+          const cellId = row.insertCell();
+          cellId.textContent = orderNo;
+          cellId.className = `${statusClass} id-cell`;
 
-        const cellTwo = row.insertCell();
-        cellTwo.textContent = order.order_item["マンゴー"];
+          const cellTime = row.insertCell();
+          cellTime.textContent = new Date(order.ordered_at).toLocaleTimeString();
+          cellTime.className = `${statusClass} time-cell`;
 
-        const cellStatus = row.insertCell();
-        cellStatus.textContent = order.status;
 
-        if (order.status === "注文済み"){
-          cellStatus.style.backgroundColor = "white";
-        } 
-        else if (order.status === "支払い済み"){
-          cellStatus.style.backgroundColor = "#ff5757";
-          cellStatus.style.color = "white";
-        }
-	
-	
-       });
+          const cellPlain = row.insertCell();
+          const valPlain = order.order_item["プレーン"];
+          cellPlain.textContent = valPlain;
+          cellPlain.className = valPlain === 0 ? "zero" : "paid";
+
+          const cellCheese = row.insertCell();
+          const valCheese = order.order_item["チーズ"];
+          cellCheese.textContent = valCheese;
+          cellCheese.className = valCheese === 0 ? "zero" : "paid";
+        });
 
       return table;
     }
@@ -114,3 +153,4 @@
 
 </body>
 </html>
+\
