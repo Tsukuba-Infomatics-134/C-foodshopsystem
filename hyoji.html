@@ -1,156 +1,242 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>2組調理室表示機</title>
+  <title>2組</title>
   <style>
-    
     body {
-      background-color: #fff;
-      font-family: sans-serif;
+      background: #ffffff;
+      font-family: 'sans-serif';
+      margin: 0;
+      padding: 0;
     }
-
-    th {
-      border: none;
-      padding: 20px 30px;
-      border-radius: 20px;
-      text-align: center;
-      font-size: 18px;
-      /*min-width: 70px;*/
-      background-color: #ff6b6b;
-      color: white;
+    .main-wrap {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: flex-start;
+      padding: 16px 16px 0 16px;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 8px 0;
+      font-size: 2em;
       font-weight: bold;
-      font-size: 20px;
+      letter-spacing: 0.05em;
     }
-
-    .id-cell, .time-cell {
-      text-align: center;
-      font-size: 12px;
-      max-width: 30px;
-      width: 15px;
-      padding: 10px 10px;
-      border-radius: 20px;
-      background-color: #008b94;
-      color: black;
+    #table-container {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px 16px 16px 16px;
+      margin-right: 32px;
+      min-width: 900px;
+      max-width: 1200px;
     }
-
-    .taste-cell, .tastetaste-cell {
-      border: none;
-      padding: 10px 10px;
-      border-radius: 20px;
-      text-align: center;
-      font-size: 18px;
-      min-width: 70px;
-    }
-
     table {
-      border-collapse: separate;
-      border-spacing: 10px;
-      margin: auto;
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 1100px;
+      background: #fff;
     }
-
-
-
-    .paid {
-      background-color: #ff6b6b;
-      color: white;
+    th, td {
+      border: 2px solid #222;
+      padding: 8px 0;
+      text-align: center;
+      font-size: 20px;
+      min-width: 100px;
     }
-
-    .ordered {
-      background-color: #008b94;
-      color: white;
+    th:nth-child(3), th:nth-child(4),
+    td:nth-child(3), td:nth-child(4) {
+      min-width: 220px;
+      font-size: 22px;
     }
-
-    .zero {
-      background-color: white;
-      border: 2px solid #ff6b6b;
-      color: black;
+    th {
+      background: #ffe066;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 0.05em;
     }
+    td {
+      background: #fff;
+      font-weight: normal;
+    }
+    .highlight {
+      background: #ff6b6b !important;
+      color: #fff;
+      font-weight: bold;
+      font-size: 22px;
+    }
+    #summary-container {
+      flex: 0 0 320px;
+      margin-top: 24px;
+      margin-left: 24px;
+      background: #fff;
+      border-radius: 8px;
+      padding: 32px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-width: 260px;
+      max-width: 400px;
+      min-height: 300px;
+    }
+    .summary-label {
+      font-size: 2.4em;
+      font-weight: bold;
+      margin-bottom: 24px;
+      letter-spacing: 0.05em;
+    }
+    .summary-item {
+      font-size: 2.8em;
+      font-weight: bold;
+      margin: 0 0 24px 0;
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+    .summary-num {
+      font-size: 2.8em;
+      font-weight: bold;
+      color: #222;
+      margin-left: 8px;
+    }
+    @media (max-width: 900px) {
+      .main-wrap {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      #table-container {
+        margin-right: 0;
+        margin-bottom: 24px;
+        min-width: unset;
+        max-width: 100vw;
+      }
+      #summary-container {
+        margin-left: 0;
+        min-width: unset;
+        max-width: 100vw;
+        align-items: flex-start;
+      }
+    }.not-paid-row td {
+  opacity: 0.5;
+}
   </style>
 </head>
 <body>
-
-  <h2 style="text-align: left;">2組注文一覧</h2>
-  <div id="table-container"></div>
-
+  <div class="main-wrap">
+    <div id="table-container">
+      <h2>2組</h2>
+      <!-- テーブルはJSで生成 -->
+    </div>
+    <div id="summary-container"></div>
+  </div>
   <script>
     const jsonData = [
      {
-      1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 2, "チーズ": 1 }, status: "支払い済み" },
-      2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 0, "チーズ": 3 }, status: "注文済み" },
+      1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 1, "チーズ": 3 }, status: "呼び出し前" },
+      2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 3, "チーズ": 0 }, status: "呼び出し中" },
       3: { ordered_at: Date.now() - 3400000, order_item: { "プレーン": 1, "チーズ": 0 }, status: "支払い済み" },
-      4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 4, "チーズ": 2 }, status: "注文済み" },
-      5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 3, "チーズ": 3 }, status: "支払い済み" },
-      6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 0, "チーズ": 1 }, status: "注文済み" },
-      7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 2, "チーズ": 0 }, status: "支払い済み" },
-      8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 1, "チーズ": 2 }, status: "注文済み" },
-      9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 0, "チーズ": 4 }, status: "支払い済み" },
-      10: { ordered_at: Date.now() - 2700000, order_item: { "プレーン": 5, "チーズ": 1 }, status: "注文済み" }
+      4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 2, "チーズ": 4 }, status: "調理済み" },
+      5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 1, "チーズ": 1 }, status: "呼び出し前" },
+      6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 2, "チーズ": 2 }, status: "支払い済み" },
+      7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 4, "チーズ": 0 }, status: "呼び出し前" },
+      8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 0, "チーズ": 1 }, status: "支払い済み" },
+      9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 2, "チーズ": 1 }, status: "呼び出し中" }
      }
     ];
 
     function createOrderTable(data) {
       const table = document.createElement("table");
-      const headers = ["ID", "時間", "プレーン", "チーズ"];
+      const headers = ["番号", "注文日時", "プレーン", "チーズ"];
       const thead = table.createTHead();
       const headerRow = thead.insertRow();
-
       headers.forEach(text => {
         const th = document.createElement("th");
         th.textContent = text;
         headerRow.appendChild(th);
       });
 
-
-
-
-
+      // ...省略...
       const tbody = table.createTBody();
       const orders = data[0];
 
-      Object.keys(orders)
-        .sort((a, b) => {
-          const statusA = orders[a].status;
-          const statusB = orders[b].status;
-          if (statusA === "支払い済み" && statusB !== "支払い済み") return -1;
-          if (statusA !== "支払い済み" && statusB === "支払い済み") return 1;
-          return a - b;
-        })
-        .forEach(orderNo => {
-          const order = orders[orderNo];
-          const row = tbody.insertRow();
+      // 支払い済みの行が上に来るようにソート
+      const sortedOrderNos = Object.keys(orders).sort((a, b) => {
+        const aPaid = orders[a].status === "支払い済み" ? 0 : 1;
+        const bPaid = orders[b].status === "支払い済み" ? 0 : 1;
+        if (aPaid !== bPaid) return aPaid - bPaid;
+        return a - b;
+      });
 
-          const statusClass = order.status === "支払い済み" ? "paid" : "ordered";
+      // 支払い済みの最後のindexを探す
+      let lastPaidIdx = -1;
+      sortedOrderNos.forEach((orderNo, idx) => {
+        if (orders[orderNo].status === "支払い済み") lastPaidIdx = idx;
+      });
 
-          const cellId = row.insertCell();
-          cellId.textContent = orderNo;
-          cellId.className = `${statusClass} id-cell`;
+      sortedOrderNos.forEach((orderNo, idx) => {
+        // 支払い済み→それ以外の境目に線を挿入
+        if (idx === lastPaidIdx + 1) {
+          const sepRow = tbody.insertRow();
+          const sepCell = sepRow.insertCell();
+          sepCell.colSpan = 4;
+          sepCell.style.padding = "0";
+          sepCell.style.border = "none";
+          sepCell.innerHTML = `<div style="height:18px;"></div>`;
+        }
 
-          const cellTime = row.insertCell();
-          cellTime.textContent = new Date(order.ordered_at).toLocaleTimeString();
-          cellTime.className = `${statusClass} time-cell`;
+        const order = orders[orderNo];
+        const row = tbody.insertRow();
 
+        // 番号
+        const cellId = row.insertCell();
+        cellId.textContent = orderNo;
 
-          const celltaste = row.insertCell();
-          const valtaste = order.order_item["プレーン"];
-          celltaste.textContent = valtaste;
-          celltaste.className = `${valtaste === 0 ? "zero" : "paid"} taste-cell`;
+        // 注文日時
+        const cellTime = row.insertCell();
+        cellTime.textContent = new Date(order.ordered_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-          const celltastetaste = row.insertCell();
-          const valtastetaste = order.order_item["チーズ"];
-          celltastetaste.textContent = valtastetaste;
-          celltastetaste.className = `${valtastetaste === 0 ? "zero" : "paid"} tastetaste-cell`;
-        });
+        // プレーン
+        const cellPlain = row.insertCell();
+        cellPlain.textContent = order.order_item["プレーン"];
+        if (order.status === "支払い済み" && order.order_item["プレーン"] > 0) {
+          cellPlain.classList.add("highlight");
+        }
+
+        // チーズ
+        const cellMango = row.insertCell();
+        cellMango.textContent = order.order_item["チーズ"];
+        if (order.status === "支払い済み" && order.order_item["チーズ"] > 0) {
+          cellMango.classList.add("highlight");
+        }
+      });
+      // ...省略...
 
       return table;
     }
 
+    // 支払い済みのプレーン・チーズ総数を計算
+    function getPaidTotals(data) {
+      const orders = data[0];
+      let plainSum = 0;
+      let mangoSum = 0;
+      Object.values(orders).forEach(order => {
+        if (order.status === "支払い済み") {
+          plainSum += order.order_item["プレーン"];
+          mangoSum += order.order_item["チーズ"];
+        }
+      });
+      return { plainSum, mangoSum };
+    }
+
     const container = document.getElementById("table-container");
     container.appendChild(createOrderTable(jsonData));
+
+    const summary = getPaidTotals(jsonData);
+    document.getElementById("summary-container").innerHTML =
+      `<div class="summary-item">プレーン<br><span class="summary-num">${summary.plainSum}個</span></div>
+       <div class="summary-item">チーズ<br><span class="summary-num">${summary.mangoSum}個</span></div>`;
   </script>
-
-
 </body>
 </html>
-\
