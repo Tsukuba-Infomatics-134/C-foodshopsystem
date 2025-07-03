@@ -36,6 +36,12 @@
       padding: 12px 12px 0px 12px;
       box-sizing: border-box;
     }
+    .class-panel.bg-red {
+      background: #ffeaea;
+    }
+    .class-panel.bg-yellow {
+      background: #fffbe0;
+    }
     .class-table-wrap {
       width: 100%;
       overflow-y: auto;
@@ -198,6 +204,10 @@
         const labels = classLabels[idx];
         const panel = document.createElement("div");
         panel.className = "class-panel";
+
+        // 1組なら薄い赤、6組なら薄い黄色
+        if (labels.name === "1組") panel.classList.add("bg-red");
+        if (labels.name === "6組") panel.classList.add("bg-yellow");
 
         // テーブル部
         const tableWrap = document.createElement("div");
