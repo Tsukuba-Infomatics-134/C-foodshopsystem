@@ -148,6 +148,10 @@
     tr.status-calling { background: #fffbe0; }
     tr.status-paid { background: #e0f7fa; }
     tr.status-cooked { background: #e6ffe6; }
+    .other-btn {
+      margin-top: 8px;
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
@@ -248,38 +252,69 @@
             </tbody>
           </table>
         `;
-        panel.appendChild(tableWrap);
-
-        // サイド情報部
-        const side = document.createElement("div");
-        side.className = "side-info";
-
-        // 調理完了判定
-        const isAllDone = Object.values(classData).every(order => order.status === "調理済み");
-        if (isAllDone) {
-          side.innerHTML += `<div class="done-badge">調理完了</div>`;
-        }
-
-        // 現在調理中の合計
         let sumA = 0, sumB = 0;
         Object.values(classData).forEach(order => {
-          if (order.status === "支払い済み（調理中）" || order.status === "調理済み") {
+          if (order.status === "支払い済み" || order.status === "調理済み") {
             sumA += order.order_item[labels.items[0]];
             sumB += order.order_item[labels.items[1]];
           }
         });
-        side.innerHTML += `
-          <div class="summary-label">現在調理中：</div>
-          <div class="summary-item">${labels.items[0]}<span class="summary-num">${sumA}個</span></div>
-          <div class="summary-item">${labels.items[1]}<span class="summary-num">${sumB}個</span></div>
-        `;
-        side.innerHTML += `<button class="other-btn">他の操作</button>`;
+        // サイド情報部
+        const side = document.createElement("div");
+        side.className = "side-info";
 
+        // 調理完了バッジ
+        const isAllDone = Object.values(classData).every(order => order.status === "調理済み");
+        if (isAllDone) {
+          const badge = document.createElement("div");
+          badge.className = "done-badge";
+          badge.textContent = "調理完了";
+          side.appendChild(badge);
+        }
+
+        // 現在調理中の合計
+        const label = document.createElement("div");
+        label.className = "summary-label";
+        label.textContent = "現在調理中：";
+        side.appendChild(label);
+
+        const itemA = document.createElement("div");
+        itemA.className = "summary-item";
+        itemA.innerHTML = `${labels.items[0]}<span class="summary-num">${sumA}個</span>`;
+        side.appendChild(itemA);
+
+        const itemB = document.createElement("div");
+        itemB.className = "summary-item";
+        itemB.innerHTML = `${labels.items[1]}<span class="summary-num">${sumB}個</span>`;
+        side.appendChild(itemB);
+
+        // 他の操作ボタン
+        const otherBtn = document.createElement("button");
+        otherBtn.textContent = "他の操作";
+        otherBtn.className = "other-btn";
+        side.appendChild(otherBtn);
+
+        // 調理完了ボタン
+        const doneBtn = document.createElement("button");
+        doneBtn.textContent = "調理完了";
+        doneBtn.className = "done-btn";
+        doneBtn.onclick = () => {
+          Object.values(classData).forEach(order => {
+            if (order.status === "支払い済み") {
+              order.status = "調理済み";
+            }
+          });
+          renderPanels();
+        };
+        side.appendChild(doneBtn);
+
+        panel.appendChild(tableWrap);
         panel.appendChild(side);
         grid.appendChild(panel);
       });
     }
-
+  </script>
+  <script>
     renderPanels();
   </script>
 </body>
