@@ -77,12 +77,14 @@
       margin-right: 32px;
       min-width: 900px;
       max-width: 1200px;
+      overflow-x: auto;
     }
     table {
       border-collapse: collapse;
       width: 100%;
       max-width: 1100px;
       background: #fff;
+      min-width: 800px;
     }
     th, td {
       border: 2px solid #222;
@@ -259,7 +261,7 @@
       {
         1: { ordered_at: Date.now() - 3600000, order_item: { "明太チーズ": 1, "プレーン": 3 }, status: "呼び出し前" },
         2: { ordered_at: Date.now() - 3500000, order_item: { "明太チーズ": 3, "プレーン": 0 }, status: "呼び出し中" },
-        3: { ordered_at: Date.now() - 3400000, order_item: { "明太チーズ": 1, "プレーン": 0 }, status: "支払い済み" },
+        3: { ordered_at: Date.now() - 3400000, order_item: { "明太チーズ": 5, "プレーン": 0 }, status: "支払い済み" },
         4: { ordered_at: Date.now() - 3300000, order_item: { "明太チーズ": 2, "プレーン": 4 }, status: "調理済み" },
         5: { ordered_at: Date.now() - 3200000, order_item: { "明太チーズ": 1, "プレーン": 1 }, status: "呼び出し前" },
         6: { ordered_at: Date.now() - 3100000, order_item: { "明太チーズ": 2, "プレーン": 2 }, status: "支払い済み" },

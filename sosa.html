@@ -2,163 +2,264 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>注文一覧</title>
+  <title>調理操作パネル</title>
   <style>
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    button { padding: 6px 12px; margin: 10px; }
-
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.6);
+    body {
+      background: #fff;
+      font-family: 'sans-serif';
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      height: 100vh;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
     }
-    .modal-content {
-      background-color: #fff;
-      margin: 15% auto;
-      padding: 20px;
-      width: 300px;
+    .class-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px 16px;
+      padding: 24px;
+      align-items: stretch;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    .class-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 0;
+      max-width: 600px;
+      height: 100%;
+      position: relative;
+      padding: 12px 12px 0px 12px;
+      box-sizing: border-box;
+    }
+    .class-table-wrap {
+      width: 100%;
+      overflow-y: auto;
+      flex: 1 1 auto;
+      max-height: none;
+      min-width: 0;
+      overflow-x: hidden;
+      margin-bottom: 0;
+    }
+    .class-table-title {
       text-align: center;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #333;
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 8px;
     }
-    .modal button {
-      margin: 10px;
-      padding: 8px 16px;
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #fff;
+      margin-bottom: 0;
+      min-width: unset;
+    }
+    th, td {
+      border: 2px solid #222;
+      padding: 8px 0;
+      text-align: center;
+      font-size: 18px;
+      min-width: 70px;
+    }
+    th {
+      background: #ffe066;
+      font-size: 16px;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+    }
+    .status-cell {
+      font-size: 1em;
+      font-weight: normal;
+    }
+    .done-badge {
+      display: inline-block;
+      background: #ff6b6b;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 20px;
+      padding: 6px 22px;
+      font-size: 1.2em;
+      margin-bottom: 12px;
+      margin-top: 8px;
+    }
+    .side-info {
+      width: 100%;
+      margin-left: 0;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 0;
+      gap: 12px;
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+    .side-info .summary-label {
+      font-size: 1em;
+      margin-bottom: 0;
+      margin-right: 4px;
+    }
+    .side-info .summary-item {
+      font-size: 1.1em;
+      font-weight: bold;
+      margin-bottom: 0;
+      letter-spacing: 0.05em;
+      margin-right: 4px;
+    }
+    .side-info .summary-num {
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #222;
+      margin-left: 2px;
+    }
+    .side-info .done-badge {
+      margin-bottom: 0;
+      margin-top: 0;
+      margin-right: 8px;
+    }
+    .side-info .other-btn {
+      margin-top: 0;
+      margin-left: 8px;
+      padding: 6px 16px;
+      font-size: 0.95em;
+    }
+    
+    @media (max-width: 1400px) {
+      .class-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    @media (max-width: 900px) {
+      .class-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-
-  <h2>注文一覧</h2>
-    <button id="completeButton">調理完了</button>
-    <button id="showAll">すべて表示</button>
-    <button id="showOnlyDone">調理済みのみ表示</button>
-    <button id="showExceptDone">デフォルト</button>
-
-
-
-
-  <table id="orderTable">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>注文日時</th>
-        <th>プレーン</th>
-        <th>チーズ</th>
-        <th>ステータス</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <!-- モーダル -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <p>調理完了してもよろしいですか？</p>
-      <button id="confirmYes">はい</button>
-      <button id="confirmNo">いいえ</button>
-    </div>
-  </div>
-
+  <div class="class-grid" id="classGrid"></div>
   <script>
-    const statusList = [
-      "呼び出し待ち",
-      "呼び出し中",
-      "支払い済み（調理中）",
-      "調理済み"
+    // クラスごとの商品名
+    const classLabels = [
+      { name: "1組", items: ["プレーン", "抹茶"] },
+      { name: "5組", items: ["コンソメ", "バター醤油"] },
+      { name: "6組", items: ["明太チーズ", "プレーン"] }
     ];
 
-    // サンプルデータ（ステータスはランダムに割り当て）
-    const jsonData = {};
-    for (let i = 1; i <= 10; i++) {
-      jsonData[i] = {
-        ordered_at: Date.now() - (3600000 - i * 100000),
-        order_item: {
-          "プレーン": Math.floor(Math.random() * 6),
-          "チーズ": Math.floor(Math.random() * 6)
-        },
-        status: statusList[Math.floor(Math.random() * 4)]
-      };
-    }
+    // 3クラス分のデータ（2組・3組・4組を削除）
+    const allClassData = [
+      // 1組: プレーン・抹茶
+      {
+        1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 1, "抹茶": 3 }, status: "呼び出し前" },
+        2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 3, "抹茶": 0 }, status: "呼び出し中" },
+        3: { ordered_at: Date.now() - 3400000, order_item: { "プレーン": 1, "抹茶": 0 }, status: "支払い済み" },
+        4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 2, "抹茶": 4 }, status: "調理済み" },
+        5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 1, "抹茶": 1 }, status: "呼び出し前" },
+        6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 2, "抹茶": 2 }, status: "支払い済み" },
+        7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 4, "抹茶": 0 }, status: "呼び出し前" },
+        8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 0, "抹茶": 1 }, status: "支払い済み" },
+        9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 2, "抹茶": 1 }, status: "呼び出し中" }
+      },
+      // 5組: コンソメ・バター醤油
+      {
+        1: { ordered_at: Date.now() - 3600000, order_item: { "コンソメ": 1, "バター醤油": 3 }, status: "呼び出し前" },
+        2: { ordered_at: Date.now() - 3500000, order_item: { "コンソメ": 3, "バター醤油": 0 }, status: "呼び出し中" },
+        3: { ordered_at: Date.now() - 3400000, order_item: { "コンソメ": 1, "バター醤油": 0 }, status: "支払い済み" },
+        4: { ordered_at: Date.now() - 3300000, order_item: { "コンソメ": 2, "バター醤油": 4 }, status: "調理済み" },
+        5: { ordered_at: Date.now() - 3200000, order_item: { "コンソメ": 1, "バター醤油": 1 }, status: "呼び出し前" },
+        6: { ordered_at: Date.now() - 3100000, order_item: { "コンソメ": 2, "バター醤油": 2 }, status: "支払い済み" },
+        7: { ordered_at: Date.now() - 3000000, order_item: { "コンソメ": 4, "バター醤油": 0 }, status: "呼び出し前" },
+        8: { ordered_at: Date.now() - 2900000, order_item: { "コンソメ": 0, "バター醤油": 1 }, status: "支払い済み" },
+        9: { ordered_at: Date.now() - 2800000, order_item: { "コンソメ": 2, "バター醤油": 1 }, status: "呼び出し中" }
+      },
+      // 6組: 明太チーズ・プレーン
+      {
+        1: { ordered_at: Date.now() - 3600000, order_item: { "明太チーズ": 1, "プレーン": 3 }, status: "呼び出し前" },
+        2: { ordered_at: Date.now() - 3500000, order_item: { "明太チーズ": 3, "プレーン": 0 }, status: "呼び出し中" },
+        3: { ordered_at: Date.now() - 3400000, order_item: { "明太チーズ": 1, "プレーン": 0 }, status: "支払い済み" },
+        4: { ordered_at: Date.now() - 3300000, order_item: { "明太チーズ": 2, "プレーン": 4 }, status: "調理済み" },
+        5: { ordered_at: Date.now() - 3200000, order_item: { "明太チーズ": 1, "プレーン": 1 }, status: "呼び出し前" },
+        6: { ordered_at: Date.now() - 3100000, order_item: { "明太チーズ": 2, "プレーン": 2 }, status: "支払い済み" },
+        7: { ordered_at: Date.now() - 3000000, order_item: { "明太チーズ": 4, "プレーン": 0 }, status: "呼び出し前" },
+        8: { ordered_at: Date.now() - 2900000, order_item: { "明太チーズ": 0, "プレーン": 1 }, status: "支払い済み" },
+        9: { ordered_at: Date.now() - 2800000, order_item: { "明太チーズ": 2, "プレーン": 1 }, status: "呼び出し中" }
+      }
+    ];
 
-    const tableBody = document.querySelector("#orderTable tbody");
-    const modal = document.getElementById("modal");
-    const confirmYes = document.getElementById("confirmYes");
-    const confirmNo = document.getElementById("confirmNo");
+    // パネル生成
+    function renderPanels() {
+      const grid = document.getElementById("classGrid");
+      grid.innerHTML = "";
+      allClassData.forEach((classData, idx) => {
+        const labels = classLabels[idx];
+        const panel = document.createElement("div");
+        panel.className = "class-panel";
 
-    let currentFilterMode = "all";  // 現在のフィルタモードを保持
-    let isFiltered = false; // フィルターがONかどうか
-
-    function renderTable(mode = "all") {
-    tableBody.innerHTML = "";
-    Object.entries(jsonData).forEach(([id, order]) => {
-        if (mode === "onlyDone" && order.status !== "調理済み") return;
-        if (mode === "exceptDone" && order.status === "調理済み") return;
-
-        const row = document.createElement("tr");
-        row.setAttribute("data-status", order.status);
-        row.setAttribute("data-id", id);
-        row.innerHTML = `
-        <td>${id}</td>
-        <td>${new Date(order.ordered_at).toLocaleString()}</td>
-        <td>${order.order_item["プレーン"]}</td>
-        <td>${order.order_item["チーズ"]}</td>
-        <td>${order.status}</td>
+        // テーブル部
+        const tableWrap = document.createElement("div");
+        tableWrap.className = "class-table-wrap";
+        tableWrap.innerHTML = `
+          <div class="class-table-title">${labels.name}</div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>注文日時</th>
+                <th>${labels.items[0]}</th>
+                <th>${labels.items[1]}</th>
+                <th>ステータス</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.entries(classData).map(([id, order]) => `
+                <tr>
+                  <td>${id}</td>
+                  <td>${new Date(order.ordered_at).toLocaleString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
+                  <td>${order.order_item[labels.items[0]]}</td>
+                  <td>${order.order_item[labels.items[1]]}</td>
+                  <td class="status-cell">${order.status}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
         `;
-        tableBody.appendChild(row);
-    });
-    }
+        panel.appendChild(tableWrap);
 
-    // 初期表示
-    renderTable("all");
+        // サイド情報部
+        const side = document.createElement("div");
+        side.className = "side-info";
 
-    // モーダルの処理（変更なし）
-    document.getElementById("completeButton").addEventListener("click", () => {
-    modal.style.display = "block";
-    });
-    // ✅「はい」ボタンの処理を変更
-    confirmYes.addEventListener("click", () => {
-        Object.entries(jsonData).forEach(([id, order]) => {
-            if (order.status === "支払い済み（調理中）") {
-                order.status = "調理済み"; // ✅ ステータスを変えるだけ！
-            }
+        // 調理完了判定
+        const isAllDone = Object.values(classData).every(order => order.status === "調理済み");
+        if (isAllDone) {
+          side.innerHTML += `<div class="done-badge">調理完了</div>`;
+        }
+
+        // 現在調理中の合計
+        let sumA = 0, sumB = 0;
+        Object.values(classData).forEach(order => {
+          if (order.status === "支払い済み（調理中）" || order.status === "調理済み") {
+            sumA += order.order_item[labels.items[0]];
+            sumB += order.order_item[labels.items[1]];
+          }
         });
-        renderTable(currentFilterMode); // ✅ 今の表示モードを維持して再描画
-        modal.style.display = "none";
-    });
+        side.innerHTML += `
+          <div class="summary-label">現在調理中：</div>
+          <div class="summary-item">${labels.items[0]}<span class="summary-num">${sumA}個</span></div>
+          <div class="summary-item">${labels.items[1]}<span class="summary-num">${sumB}個</span></div>
+        `;
+        side.innerHTML += `<button class="other-btn">他の操作</button>`;
 
-    confirmNo.addEventListener("click", () => {
-    modal.style.display = "none";
-    });
-    window.addEventListener("click", (e) => {
-    if (e.target === modal) {
-        modal.style.display = "none";
+        panel.appendChild(side);
+        grid.appendChild(panel);
+      });
     }
-    });
 
-    // ✅ 各フィルターボタンに動作を割り当て
-    document.getElementById("showAll").addEventListener("click", () => {
-    currentFilterMode = "all";
-    renderTable("all");
-    });
-
-    document.getElementById("showOnlyDone").addEventListener("click", () => {
-    currentFilterMode = "onlyDone";
-    renderTable("onlyDone");
-    });
-
-    document.getElementById("showExceptDone").addEventListener("click", () => {
-    currentFilterMode = "exceptDone";
-    renderTable("exceptDone");
-    });
-
-
-
-
+    renderPanels();
   </script>
 </body>
 </html>
