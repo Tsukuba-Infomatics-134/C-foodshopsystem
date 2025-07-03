@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>2組</title>
+  <title>クラス選択ログイン</title>
   <style>
     body {
       background: #ffffff;
@@ -10,6 +10,51 @@
       margin: 0;
       padding: 0;
     }
+    .login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f7f7f7;
+    }
+    .login-box {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px #ccc;
+      padding: 32px 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .login-box h2 {
+      margin-bottom: 24px;
+      font-size: 1.6em;
+    }
+    .login-box select, .login-box input {
+      font-size: 1.1em;
+      padding: 8px 12px;
+      margin-bottom: 16px;
+      border-radius: 4px;
+      border: 1px solid #bbb;
+      width: 200px;
+    }
+    .login-box button {
+      font-size: 1.1em;
+      padding: 8px 24px;
+      border-radius: 4px;
+      border: none;
+      background: #ffe066;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .login-error {
+      color: #d03c69;
+      margin-bottom: 8px;
+      font-size: 1em;
+      min-height: 1.2em;
+    }
+    /* 既存の表・総数のスタイルは省略せずそのまま残してください */
     .main-wrap {
       display: flex;
       flex-direction: row;
@@ -82,12 +127,6 @@
       max-width: 400px;
       min-height: 300px;
     }
-    .summary-label {
-      font-size: 2.4em;
-      font-weight: bold;
-      margin-bottom: 24px;
-      letter-spacing: 0.05em;
-    }
     .summary-item {
       font-size: 2.8em;
       font-weight: bold;
@@ -118,21 +157,43 @@
         max-width: 100vw;
         align-items: flex-start;
       }
-    }.not-paid-row td {
-  opacity: 0.5;
-}
+    }
+    .not-paid-row td {
+      opacity: 0.5;
+    }
   </style>
 </head>
 <body>
-  <div class="main-wrap">
+  <!-- ログイン画面 -->
+  <div class="login-wrap" id="login-wrap">
+    <form class="login-box" id="login-form" onsubmit="return false;">
+      <h2>クラス選択ログイン</h2>
+      <div class="login-error" id="login-error"></div>
+      <select id="class-select" required>
+        <option value="">クラスを選択</option>
+        <option value="1">1組（プレーン・抹茶）</option>
+        <option value="2">2組（プレーン・チーズ）</option>
+        <option value="3">3組（プレーン・みたらし）</option>
+        <option value="4">4組（プレーン・マンゴー）</option>
+        <option value="5">5組（コンソメ・バター醤油）</option>
+        <option value="6">6組（明太チーズ・プレーン）</option>
+      </select>
+      <input type="password" id="class-pass" placeholder="パスワード" required>
+      <button type="submit">ログイン</button>
+    </form>
+  </div>
+
+  <!-- 表・総数表示部 -->
+  <div class="main-wrap" id="main-wrap" style="display:none;">
     <div id="table-container">
-      <h2>2組</h2>
+      <h2 id="class-title"></h2>
       <!-- テーブルはJSで生成 -->
     </div>
     <div id="summary-container"></div>
   </div>
+
   <script>
-    // --- ここから ---
+    // --- データ ---
     const allClassData = [
       // 1組: プレーン・抹茶
       {
@@ -207,11 +268,68 @@
         9: { ordered_at: Date.now() - 2800000, order_item: { "明太チーズ": 2, "プレーン": 1 }, status: "呼び出し中" }
       }
     ];
-    // --- ここまで ---
 
-    function createOrderTable(data) {
+    // クラスごとの商品名
+    const classLabels = [
+      { name: "1組", items: ["プレーン", "抹茶"] },
+      { name: "2組", items: ["プレーン", "チーズ"] },
+      { name: "3組", items: ["プレーン", "みたらし"] },
+      { name: "4組", items: ["プレーン", "マンゴー"] },
+      { name: "5組", items: ["コンソメ", "バター醤油"] },
+      { name: "6組", items: ["明太チーズ", "プレーン"] }
+    ];
+
+    // パスワード（例：全て "pass" でOK。必要に応じて変更可）
+    const classPasswords = ["pass1", "pass2", "pass3", "pass4", "pass5", "pass6"];
+
+    // ログイン処理
+    document.getElementById("login-form").onsubmit = function() {
+      const classIdx = parseInt(document.getElementById("class-select").value, 10) - 1;
+      const pass = document.getElementById("class-pass").value;
+      const errorDiv = document.getElementById("login-error");
+
+      if (isNaN(classIdx) || classIdx < 0 || classIdx >= allClassData.length) {
+        errorDiv.textContent = "クラスを選択してください";
+        return false;
+      }
+      if (pass !== classPasswords[classIdx]) {
+        errorDiv.textContent = "パスワードが違います";
+        return false;
+      }
+
+      // ログイン成功
+      errorDiv.textContent = "";
+      document.getElementById("login-wrap").style.display = "none";
+      document.getElementById("main-wrap").style.display = "flex";
+      showClassTable(classIdx);
+      return false;
+    };
+
+    // 表示処理
+    function showClassTable(classIdx) {
+      const jsonData = [allClassData[classIdx]];
+      const labels = classLabels[classIdx];
+      document.getElementById("class-title").textContent = labels.name;
+
+      // テーブル生成
+      const container = document.getElementById("table-container");
+      // 既存テーブル削除
+      const oldTable = container.querySelector("table");
+      if (oldTable) oldTable.remove();
+
+      container.appendChild(createOrderTable(jsonData, labels.items));
+
+      // 総数
+      const summary = getPaidTotals(jsonData, labels.items);
+      document.getElementById("summary-container").innerHTML =
+        `<div class="summary-item">${labels.items[0]}<br><span class="summary-num">${summary[0]}個</span></div>
+         <div class="summary-item">${labels.items[1]}<br><span class="summary-num">${summary[1]}個</span></div>`;
+    }
+
+    // テーブル生成
+    function createOrderTable(data, items) {
       const table = document.createElement("table");
-      const headers = ["番号", "注文日時", "プレーン", "チーズ"];
+      const headers = ["番号", "注文日時", items[0], items[1]];
       const thead = table.createTHead();
       const headerRow = thead.insertRow();
       headers.forEach(text => {
@@ -220,7 +338,6 @@
         headerRow.appendChild(th);
       });
 
-      // ...省略...
       const tbody = table.createTBody();
       const orders = data[0];
 
@@ -252,6 +369,11 @@
         const order = orders[orderNo];
         const row = tbody.insertRow();
 
+        // 支払い済み以外の行にクラスを付与
+        if (order.status !== "支払い済み") {
+          row.classList.add("not-paid-row");
+        }
+
         // 番号
         const cellId = row.insertCell();
         cellId.textContent = orderNo;
@@ -260,46 +382,37 @@
         const cellTime = row.insertCell();
         cellTime.textContent = new Date(order.ordered_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        // プレーン
-        const cellPlain = row.insertCell();
-        cellPlain.textContent = order.order_item["プレーン"];
-        if (order.status === "支払い済み" && order.order_item["プレーン"] > 0) {
-          cellPlain.classList.add("highlight");
+        // 商品1
+        const cellA = row.insertCell();
+        cellA.textContent = order.order_item[items[0]] ?? 0;
+        if (order.status === "支払い済み" && order.order_item[items[0]] > 0) {
+          cellA.classList.add("highlight");
         }
 
-        // チーズ
-        const cellMango = row.insertCell();
-        cellMango.textContent = order.order_item["チーズ"];
-        if (order.status === "支払い済み" && order.order_item["チーズ"] > 0) {
-          cellMango.classList.add("highlight");
+        // 商品2
+        const cellB = row.insertCell();
+        cellB.textContent = order.order_item[items[1]] ?? 0;
+        if (order.status === "支払い済み" && order.order_item[items[1]] > 0) {
+          cellB.classList.add("highlight");
         }
       });
-      // ...省略...
 
       return table;
     }
 
-    // 支払い済みのプレーン・チーズ総数を計算
-    function getPaidTotals(data) {
+    // 支払い済みの各商品の総数を計算
+    function getPaidTotals(data, items) {
       const orders = data[0];
-      let plainSum = 0;
-      let mangoSum = 0;
+      let sumA = 0;
+      let sumB = 0;
       Object.values(orders).forEach(order => {
         if (order.status === "支払い済み") {
-          plainSum += order.order_item["プレーン"];
-          mangoSum += order.order_item["チーズ"];
+          sumA += order.order_item[items[0]] ?? 0;
+          sumB += order.order_item[items[1]] ?? 0;
         }
       });
-      return { plainSum, mangoSum };
+      return [sumA, sumB];
     }
-
-    const container = document.getElementById("table-container");
-    container.appendChild(createOrderTable(jsonData));
-
-    const summary = getPaidTotals(jsonData);
-    document.getElementById("summary-container").innerHTML =
-      `<div class="summary-item">プレーン<br><span class="summary-num">${summary.plainSum}個</span></div>
-       <div class="summary-item">チーズ<br><span class="summary-num">${summary.mangoSum}個</span></div>`;
   </script>
 </body>
 </html>
