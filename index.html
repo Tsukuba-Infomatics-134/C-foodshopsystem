@@ -132,19 +132,82 @@
     <div id="summary-container"></div>
   </div>
   <script>
-    const jsonData = [
-     {
-      1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 1, "チーズ": 3 }, status: "呼び出し前" },
-      2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 3, "チーズ": 0 }, status: "呼び出し中" },
-      3: { ordered_at: Date.now() - 3400000, order_item: { "プレーン": 1, "チーズ": 0 }, status: "支払い済み" },
-      4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 2, "チーズ": 4 }, status: "調理済み" },
-      5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 1, "チーズ": 1 }, status: "呼び出し前" },
-      6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 2, "チーズ": 2 }, status: "支払い済み" },
-      7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 4, "チーズ": 0 }, status: "呼び出し前" },
-      8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 0, "チーズ": 1 }, status: "支払い済み" },
-      9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 2, "チーズ": 1 }, status: "呼び出し中" }
-     }
+    // --- ここから ---
+    const allClassData = [
+      // 1組: プレーン・抹茶
+      {
+        1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 1, "抹茶": 3 }, status: "呼び出し前" },
+        2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 3, "抹茶": 0 }, status: "呼び出し中" },
+        3: { ordered_at: Date.now() - 3400000, order_item: { "プレーン": 1, "抹茶": 0 }, status: "支払い済み" },
+        4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 2, "抹茶": 4 }, status: "調理済み" },
+        5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 1, "抹茶": 1 }, status: "呼び出し前" },
+        6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 2, "抹茶": 2 }, status: "支払い済み" },
+        7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 4, "抹茶": 0 }, status: "呼び出し前" },
+        8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 0, "抹茶": 1 }, status: "支払い済み" },
+        9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 2, "抹茶": 1 }, status: "呼び出し中" }
+      },
+      // 2組: プレーン・チーズ
+      {
+        1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 1, "チーズ": 3 }, status: "呼び出し前" },
+        2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 3, "チーズ": 0 }, status: "呼び出し中" },
+        3: { ordered_at: Date.now() - 3400000, order_item: { "プレーン": 1, "チーズ": 0 }, status: "支払い済み" },
+        4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 2, "チーズ": 4 }, status: "調理済み" },
+        5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 1, "チーズ": 1 }, status: "呼び出し前" },
+        6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 2, "チーズ": 2 }, status: "支払い済み" },
+        7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 4, "チーズ": 0 }, status: "呼び出し前" },
+        8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 0, "チーズ": 1 }, status: "支払い済み" },
+        9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 2, "チーズ": 1 }, status: "呼び出し中" }
+      },
+      // 3組: プレーン・みたらし
+      {
+        1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 1, "みたらし": 3 }, status: "呼び出し前" },
+        2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 3, "みたらし": 0 }, status: "呼び出し中" },
+        3: { ordered_at: Date.now() - 3400000, order_item: { "プレーン": 1, "みたらし": 0 }, status: "支払い済み" },
+        4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 2, "みたらし": 4 }, status: "調理済み" },
+        5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 1, "みたらし": 1 }, status: "呼び出し前" },
+        6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 2, "みたらし": 2 }, status: "支払い済み" },
+        7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 4, "みたらし": 0 }, status: "呼び出し前" },
+        8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 0, "みたらし": 1 }, status: "支払い済み" },
+        9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 2, "みたらし": 1 }, status: "呼び出し中" }
+      },
+      // 4組: プレーン・マンゴー
+      {
+        1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 1, "マンゴー": 3 }, status: "呼び出し前" },
+        2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 3, "マンゴー": 0 }, status: "呼び出し中" },
+        3: { ordered_at: Date.now() - 3400000, order_item: { "プレーン": 1, "マンゴー": 0 }, status: "支払い済み" },
+        4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 2, "マンゴー": 4 }, status: "調理済み" },
+        5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 1, "マンゴー": 1 }, status: "呼び出し前" },
+        6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 2, "マンゴー": 2 }, status: "支払い済み" },
+        7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 4, "マンゴー": 0 }, status: "呼び出し前" },
+        8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 0, "マンゴー": 1 }, status: "支払い済み" },
+        9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 2, "マンゴー": 1 }, status: "呼び出し中" }
+      },
+      // 5組: コンソメ・バター醤油
+      {
+        1: { ordered_at: Date.now() - 3600000, order_item: { "コンソメ": 1, "バター醤油": 3 }, status: "呼び出し前" },
+        2: { ordered_at: Date.now() - 3500000, order_item: { "コンソメ": 3, "バター醤油": 0 }, status: "呼び出し中" },
+        3: { ordered_at: Date.now() - 3400000, order_item: { "コンソメ": 1, "バター醤油": 0 }, status: "支払い済み" },
+        4: { ordered_at: Date.now() - 3300000, order_item: { "コンソメ": 2, "バター醤油": 4 }, status: "調理済み" },
+        5: { ordered_at: Date.now() - 3200000, order_item: { "コンソメ": 1, "バター醤油": 1 }, status: "呼び出し前" },
+        6: { ordered_at: Date.now() - 3100000, order_item: { "コンソメ": 2, "バター醤油": 2 }, status: "支払い済み" },
+        7: { ordered_at: Date.now() - 3000000, order_item: { "コンソメ": 4, "バター醤油": 0 }, status: "呼び出し前" },
+        8: { ordered_at: Date.now() - 2900000, order_item: { "コンソメ": 0, "バター醤油": 1 }, status: "支払い済み" },
+        9: { ordered_at: Date.now() - 2800000, order_item: { "コンソメ": 2, "バター醤油": 1 }, status: "呼び出し中" }
+      },
+      // 6組: 明太チーズ・プレーン
+      {
+        1: { ordered_at: Date.now() - 3600000, order_item: { "明太チーズ": 1, "プレーン": 3 }, status: "呼び出し前" },
+        2: { ordered_at: Date.now() - 3500000, order_item: { "明太チーズ": 3, "プレーン": 0 }, status: "呼び出し中" },
+        3: { ordered_at: Date.now() - 3400000, order_item: { "明太チーズ": 1, "プレーン": 0 }, status: "支払い済み" },
+        4: { ordered_at: Date.now() - 3300000, order_item: { "明太チーズ": 2, "プレーン": 4 }, status: "調理済み" },
+        5: { ordered_at: Date.now() - 3200000, order_item: { "明太チーズ": 1, "プレーン": 1 }, status: "呼び出し前" },
+        6: { ordered_at: Date.now() - 3100000, order_item: { "明太チーズ": 2, "プレーン": 2 }, status: "支払い済み" },
+        7: { ordered_at: Date.now() - 3000000, order_item: { "明太チーズ": 4, "プレーン": 0 }, status: "呼び出し前" },
+        8: { ordered_at: Date.now() - 2900000, order_item: { "明太チーズ": 0, "プレーン": 1 }, status: "支払い済み" },
+        9: { ordered_at: Date.now() - 2800000, order_item: { "明太チーズ": 2, "プレーン": 1 }, status: "呼び出し中" }
+      }
     ];
+    // --- ここまで ---
 
     function createOrderTable(data) {
       const table = document.createElement("table");
