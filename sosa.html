@@ -233,22 +233,35 @@
               </tr>
             </thead>
             <tbody>
-              ${Object.entries(classData).map(([id, order]) => {
-                let rowClass = "";
-                if (order.status === "呼び出し前") rowClass = "status-before";
-                else if (order.status === "呼び出し中") rowClass = "status-calling";
-                else if (order.status === "支払い済み") rowClass = "status-paid";
-                else if (order.status === "調理済み") rowClass = "status-cooked";
-                return `
-                  <tr class="${rowClass}">
-                    <td>${id}</td>
-                    <td>${new Date(order.ordered_at).toLocaleString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
-                    <td>${order.order_item[labels.items[0]]}</td>
-                    <td>${order.order_item[labels.items[1]]}</td>
-                    <td class="status-cell">${order.status}</td>
-                  </tr>
-                `;
-              }).join("")}
+              ${
+                Object.entries(classData)
+                  // ステータス順に並べ替え
+                  .sort(([, a], [, b]) => {
+                    const statusOrder = {
+                      "支払い済み": 0,
+                      "呼び出し中": 1,
+                      "呼び出し前": 2,
+                      "調理済み": 3
+                    };
+                    return statusOrder[a.status] - statusOrder[b.status];
+                  })
+                  .map(([id, order]) => {
+                    let rowClass = "";
+                    if (order.status === "呼び出し前") rowClass = "status-before";
+                    else if (order.status === "呼び出し中") rowClass = "status-calling";
+                    else if (order.status === "支払い済み") rowClass = "status-paid";
+                    else if (order.status === "調理済み") rowClass = "status-cooked";
+                    return `
+                      <tr class="${rowClass}">
+                        <td>${id}</td>
+                        <td>${new Date(order.ordered_at).toLocaleString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
+                        <td>${order.order_item[labels.items[0]]}</td>
+                        <td>${order.order_item[labels.items[1]]}</td>
+                        <td class="status-cell">${order.status}</td>
+                      </tr>
+                    `;
+                  }).join("")
+              }
             </tbody>
           </table>
         `;
