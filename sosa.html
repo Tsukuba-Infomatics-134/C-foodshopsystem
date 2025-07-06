@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>調理操作パネル</title>
+  <title>調理室機　操作用</title>
   <style>
     body {
       background: #fff;
@@ -42,15 +42,6 @@
     .class-panel.bg-yellow {
       background: #fffbe0;
     }
-    .class-table-wrap {
-      width: 100%;
-      overflow-y: auto;
-      flex: 1 1 auto;
-      max-height: none;
-      min-width: 0;
-      overflow-x: hidden;
-      margin-bottom: 0;
-    }
     .class-table-title {
       text-align: center;
       font-size: 2em;
@@ -65,24 +56,29 @@
       margin-bottom: 0;
     }
     table {
-      border-collapse: collapse;
+      table-layout: fixed;
       width: 100%;
-      background: #fff;
-      margin-bottom: 0;
-      min-width: unset;
+      border-collapse: collapse;
     }
+
     th, td {
-      border: 2px solid #222;
-      padding: 8px 0;
-      text-align: center;
-      font-size: 18px;
-      min-width: 70px;
+      border: 2px solid #000000;
+      padding: 6px 8px;
+      text-align: center !important;
+      white-space: nowrap;
     }
+
+    /* 幅設定 */
+    .col-id     { width: 8%; }
+    .col-time   { width: 18%; }
+    .col-item   { width: 22%; } /* 商品1・2両方に */
+    .col-status { width: 35%; } /* ゆったりめ */
+
     th {
       background: #ffe066;
       font-size: 16px;
       font-weight: bold;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.01em;
     }
     .status-cell {
       font-size: 1em;
@@ -261,6 +257,121 @@
     #confirm-no:hover {
       background: #ccc !important;
     }
+    /* 操作モーダル */
+    #operation-modal {
+      position: fixed;
+      z-index: 9999;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.3);
+    }
+    .modal-dialog {
+      position: relative;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      z-index: 10;
+    }
+    .modal-title {
+      font-size: 1.4em;
+      margin-bottom: 16px;
+    }
+    .modal-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .tab-btn {
+      padding: 6px 12px;
+      background: #eee;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: #ccc;
+      font-weight: bold;
+    }
+    .modal-body {
+      margin-bottom: 16px;
+    }
+    .modal-footer {
+      text-align: right;
+    }
+    #modal-cancel,
+    #modal-confirm {
+      padding: 6px 14px;
+      margin-left: 8px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    #modal-cancel {
+      background: #ccc;
+    }
+    #modal-confirm {
+      background: #4caf50;
+      color: #fff;
+    }
+    #operation-modal .modal-dialog {
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      position: fixed !important;
+    }
+
+    .class-table-wrap {
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden; /* 外側ではスクロールさせない */
+    }
+
+    .class-table-inner {
+      max-height: 500px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .class-table-inner table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .class-table-inner thead th {
+      position: sticky;
+      top: 0;
+      background: #ffe066;
+      z-index: 1;
+    }
+
+    /* テーブルは通常どおり表示 */
+    .class-table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    /* 固定行（ヘッダー） */
+    .class-table-wrap thead th {
+      position: sticky;
+      top: 0;
+      background: #ffe066;
+      z-index: 1;
+    }
+
+
   </style>
 </head>
 <body>
@@ -323,6 +434,9 @@
       }
     ];
 
+    const sortByIdFlags = [false, false, false]; // クラスごとのソート状態
+
+
     // カスタムダイアログ関数
     function showCustomConfirm(message, onYes, anchorElem) {
       const dialog = document.getElementById('custom-confirm');
@@ -363,6 +477,7 @@
 
     // パネル生成
     function renderPanels() {
+      console.log("renderPanels called");
       const grid = document.getElementById("classGrid");
       grid.innerHTML = "";
       allClassData.forEach((classData, idx) => {
@@ -370,11 +485,9 @@
         const panel = document.createElement("div");
         panel.className = "class-panel";
 
-        // 1組なら薄い赤、6組なら薄い黄色
         if (labels.name === "1組") panel.classList.add("bg-red");
         if (labels.name === "6組") panel.classList.add("bg-yellow");
 
-        
         let sumA = 0, sumB = 0;
         Object.values(classData).forEach(order => {
           if (order.status === "支払い済み") {
@@ -382,11 +495,9 @@
             sumB += order.order_item[labels.items[1]];
           }
         });
-        // サイド情報部
+
         const side = document.createElement("div");
         side.className = "side-info";
-
-        // 調理完了バッジ
         const isAllDone = Object.values(classData).every(order => order.status === "調理済み");
         if (isAllDone) {
           const badge = document.createElement("div");
@@ -395,7 +506,6 @@
           side.appendChild(badge);
         }
 
-        // 現在調理中の合計
         const label = document.createElement("div");
         label.className = "summary-label";
         label.textContent = "現在調理中：";
@@ -411,90 +521,126 @@
         itemB.innerHTML = `${labels.items[1]}<span class="summary-num">${sumB}個</span>`;
         side.appendChild(itemB);
 
-        // テーブルタイトル部
         const tableTitleDiv = document.createElement("div");
         tableTitleDiv.className = "class-table-title";
-        tableTitleDiv.style.display = "flex";
-        tableTitleDiv.style.justifyContent = "space-between";
-        tableTitleDiv.style.alignItems = "center";
 
-        // クラス名
+        const updateBtn = document.createElement("button");
+        updateBtn.textContent = "更新";
+        updateBtn.className = "other-btn";
+        updateBtn.title = "データを追加";
+        updateBtn.addEventListener("click", () => {
+          allClassData.forEach((classData, cidx) => {
+            const items = classLabels[cidx].items;
+            const nextId = () => Math.max(0, ...Object.keys(classData).map(Number)) + 1;
+            const id1 = nextId();
+            const id2 = id1 + 1;
+            classData[id1] = {
+              ordered_at: Date.now(),
+              order_item: { [items[0]]: 1, [items[1]]: 2 },
+              status: "支払い済み"
+            };
+            classData[id2] = {
+              ordered_at: Date.now(),
+              order_item: { [items[0]]: 2, [items[1]]: 1 },
+              status: "呼び出し前"
+            };
+          });
+          renderPanels(); // 再描画
+        });
+
         const classNameSpan = document.createElement("span");
         classNameSpan.textContent = labels.name;
-
-        // 他の操作ボタン
         const otherBtn = document.createElement("button");
         otherBtn.textContent = "他の操作";
         otherBtn.className = "other-btn";
         otherBtn.title = "他の操作";
+        otherBtn.addEventListener("click", () => {
+          console.log("他の操作ボタン押されました", idx);
+          openOperationModal(idx);
+        });
+        const sortBtn = document.createElement("button");
+        sortBtn.textContent = sortByIdFlags[idx] ? "ステータス順" : "ID順";
+        sortBtn.className = "other-btn";
+        sortBtn.title = "ID順に並べ替え";
+        sortBtn.addEventListener("click", () => {
+          sortByIdFlags[idx] = !sortByIdFlags[idx]; // 状態を切り替え
+          renderPanels(); // 再描画
+        });
 
-        // タイトル部に追加
+        tableTitleDiv.appendChild(sortBtn);
         tableTitleDiv.appendChild(classNameSpan);
         tableTitleDiv.appendChild(otherBtn);
+        tableTitleDiv.appendChild(updateBtn);
 
-        // テーブル部
+
         const tableWrap = document.createElement("div");
         tableWrap.className = "class-table-wrap";
         tableWrap.appendChild(tableTitleDiv);
-        tableWrap.innerHTML += `
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>注文時間</th>
-                <th>${labels.items[0]}</th>
-                <th>${labels.items[1]}</th>
-                <th>ステータス</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${
-                Object.entries(classData)
-                  .sort(([, a], [, b]) => {
-                    const statusOrder = {
-                      "支払い済み": 0,
-                      "呼び出し中": 1,
-                      "呼び出し前": 2,
-                      "調理済み": 3
-                    };
-                    return statusOrder[a.status] - statusOrder[b.status];
-                  })
-                  .map(([id, order]) => {
-                    let rowClass = "";
-                    if (order.status === "呼び出し前") rowClass = "status-before";
-                    else if (order.status === "呼び出し中") rowClass = "status-calling";
-                    else if (order.status === "支払い済み") rowClass = "status-paid";
-                    else if (order.status === "調理済み") rowClass = "status-cooked";
-                    return `
-                      <tr class="${rowClass}">
-                        <td>${id}</td>
-                        <td>${new Date(order.ordered_at).toLocaleString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
-                        <td>${order.order_item[labels.items[0]]}</td>
-                        <td>${order.order_item[labels.items[1]]}</td>
-                        <td class="status-cell">${order.status}</td>
-                      </tr>
-                    `;
-                  }).join("")
-              }
-            </tbody>
-          </table>
-        `;
 
-        // 調理完了ボタン
+        // ← テーブル部分はスクロール可能にするため、ラッパーで囲む
+        const tableInner = document.createElement("div");
+        tableInner.className = "class-table-inner";
+
+        const table = document.createElement("table");
+        // ...thead, tbody作成は今まで通り
+
+        const thead = document.createElement("thead");
+        thead.innerHTML = `
+          <tr>
+            <th class="col-id">ID</th>
+            <th class="col-time">注文時間</th>
+            <th class="col-item">${labels.items[0]}</th>
+            <th class="col-item">${labels.items[1]}</th>
+            <th class="col-status">ステータス</th>
+          </tr>
+        `;
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        Object.entries(classData)
+        .sort((a, b) => {
+          if (sortByIdFlags[idx]) {
+            return Number(a[0]) - Number(b[0]); // ID順
+          } else {
+            const statusOrder = {
+              "支払い済み": 0,
+              "呼び出し中": 1,
+              "呼び出し前": 2,
+              "調理済み": 3
+            };
+            return statusOrder[a[1].status] - statusOrder[b[1].status]; // ステータス順
+          }
+        })
+          .forEach(([id, order]) => {
+            const row = document.createElement("tr");
+            row.className = {
+              "呼び出し前": "status-before",
+              "呼び出し中": "status-calling",
+              "支払い済み": "status-paid",
+              "調理済み": "status-cooked"
+            }[order.status] || "";
+
+            row.innerHTML = `
+              <td class="col-id">${id}</td>
+              <td class="col-time">${new Date(order.ordered_at).toLocaleString('ja-JP', { hour: '2-digit', minute: '2-digit'})}</td>
+              <td class="col-item">${order.order_item[labels.items[0]]}</td>
+              <td class="col-item">${order.order_item[labels.items[1]]}</td>
+              <td class="status-cell","col-status">${order.status}</td>
+            `;
+            tbody.appendChild(row);
+          });
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        tableInner.appendChild(table);
+
+        tableWrap.appendChild(tableInner);
+
         const doneBtn = document.createElement("button");
         doneBtn.textContent = "調理完了";
-        doneBtn.style.margin = "24px auto 12px auto";
-        doneBtn.style.display = "block";
-        doneBtn.style.fontSize = "1.3em";
-        doneBtn.style.fontWeight = "bold";
-        doneBtn.style.background = "#ff6b6b";
-        doneBtn.style.color = "#fff";
-        doneBtn.style.border = "none";
-        doneBtn.style.borderRadius = "16px";
-        doneBtn.style.padding = "12px 40px";
         doneBtn.className = "done-btn";
         doneBtn.onclick = () => {
-          // 支払い済みの商品を集計
+          console.log("調理完了ボタンが押されました");
           let items = [];
           Object.values(classData).forEach(order => {
             if (order.status === "支払い済み") {
@@ -510,7 +656,7 @@
           let itemHtml = items.length
             ? items.map(i => `${i.name} <b>${i.count}個</b>`).join('<br>')
             : '<span style="color:#888;">（該当なし）</span>';
-          const msg = `<b>${labels.name}</b><br>${itemHtml}<br>調理完了していいですか？`;
+          const msg = `<b>${labels.name}</b><br>${itemHtml}<br>調理完了しましたか？`;
           showCustomConfirm(msg, () => {
             Object.values(classData).forEach(order => {
               if (order.status === "支払い済み") {
@@ -522,15 +668,203 @@
         };
 
         panel.appendChild(tableWrap);
-
         panel.appendChild(doneBtn);
         panel.appendChild(side);
         grid.appendChild(panel);
       });
     }
+
+    function syncTableColumnWidths(table) {
+      const ths = table.querySelectorAll("thead th");
+      const tds = table.querySelectorAll("tbody tr:first-child td");
+
+      if (ths.length !== tds.length) return;
+
+      for (let i = 0; i < ths.length; i++) {
+        const width = Math.floor(ths[i].getBoundingClientRect().width);
+        ths[i].style.width = `${width}px`;
+        tds[i].style.width = `${width}px`;
+      }
+    }
+
+    
+    function openOperationModal(classIndex) {
+      
+      console.log("openOperationModal called with", classIndex);
+
+      const modal = document.getElementById("operation-modal");
+      // クラス名をタイトルに表示
+      const title = modal.querySelector(".modal-title");
+      title.innerHTML = `他の操作（${classLabels[classIndex].name}）`;
+
+      const tabs = modal.querySelectorAll(".tab-btn");
+      const body = modal.querySelector(".modal-body");
+      const confirmBtn = document.getElementById("modal-confirm");
+      const cancelBtn = document.getElementById("modal-cancel");
+
+      let currentMode = "add"; // 初期状態：追加モード
+      let currentID = "";
+
+      function renderForm() {
+        const labels = classLabels[classIndex];
+        const classData = allClassData[classIndex];
+
+        let sortBtnHTML = `
+          <button id="sort-toggle-btn" class="other-btn" style="margin-top: 10px;">
+            ${sortByIdFlags[classIndex] ? "ステータス順" : "ID順"}
+          </button>
+          <hr>
+        `;
+
+        if (currentMode === "add" || currentMode === "edit") {
+          body.innerHTML = sortBtnHTML + `
+            <label>ID: <input id="input-id" type="number" /></label><br>
+            <label>${labels.items[0]}: <input id="input-item1" type="number" /></label><br>
+            <label>${labels.items[1]}: <input id="input-item2" type="number" /></label><br>
+            <label>ステータス: 
+              <select id="input-status">
+                <option>呼び出し前</option>
+                <option>呼び出し中</option>
+                <option>支払い済み</option>
+                <option>調理済み</option>
+              </select>
+            </label><br>
+          `;
+        } else if (currentMode === "delete") {
+          body.innerHTML = sortBtnHTML + `
+            <label>削除するID: <input id="input-id" type="number" /></label><br>
+          `;
+        } else if (currentMode === "reload") {
+          body.innerHTML = sortBtnHTML + `<p>外部ソースから最新データを読み込みます。</p>`;
+        }
+
+        // 並べ替えボタンのイベント設定（毎回再設定）
+        setTimeout(() => {
+          const sortBtn = document.getElementById("sort-toggle-btn");
+          if (sortBtn) {
+            sortBtn.onclick = () => {
+              sortByIdFlags[classIndex] = !sortByIdFlags[classIndex];
+              modal.style.display = "none"; // モーダル閉じる
+              renderPanels(); // パネル更新
+            };
+          }
+        }, 0);
+      }
+
+
+      // タブ切り替え処理
+      tabs.forEach(tab => {
+        tab.onclick = () => {
+          tabs.forEach(t => t.classList.remove("active"));
+          tab.classList.add("active");
+          currentMode = tab.getAttribute("data-mode");
+          renderForm();
+        };
+      });
+
+      // 実行ボタン処理
+      confirmBtn.onclick = () => {
+        const classData = allClassData[classIndex];
+        const labels = classLabels[classIndex];
+
+        const idInput = document.getElementById("input-id");
+        const id = idInput ? Number(idInput.value) : null;
+
+        if (currentMode === "add" || currentMode === "edit") {
+          const item1 = Number(document.getElementById("input-item1").value);
+          const item2 = Number(document.getElementById("input-item2").value);
+          const status = document.getElementById("input-status").value;
+
+          if (!id || isNaN(item1) || isNaN(item2)) {
+            alert("すべての項目を正しく入力してください");
+            return;
+          }
+
+          classData[id] = {
+            ordered_at: Date.now(),
+            order_item: {
+              [labels.items[0]]: item1,
+              [labels.items[1]]: item2
+            },
+            status: status
+          };
+
+        } else if (currentMode === "delete") {
+          if (!id || !classData[id]) {
+            alert("そのIDの注文は存在しません");
+            return;
+          }
+          delete classData[id];
+
+        } else if (currentMode === "reload") {
+          // 今回は仮の再読み込み（ダミーで2件加える）
+          const newID = Object.keys(classData).length + 1;
+          classData[newID] = {
+            ordered_at: Date.now(),
+            order_item: {
+              [labels.items[0]]: 1,
+              [labels.items[1]]: 2
+            },
+            status: "支払い済み"
+          };
+          classData[newID + 1] = {
+            ordered_at: Date.now(),
+            order_item: {
+              [labels.items[0]]: 2,
+              [labels.items[1]]: 1
+            },
+            status: "呼び出し前"
+          };
+        }
+
+        modal.style.display = "none";
+        renderPanels();
+      };
+
+      // キャンセルボタン
+      cancelBtn.onclick = () => {
+        modal.style.display = "none";
+      };
+
+      // 初期化して表示
+      currentMode = "add";
+      tabs.forEach(t => t.classList.remove("active"));
+      modal.querySelector(`.tab-btn[data-mode="add"]`).classList.add("active");
+      renderForm();
+      modal.style.display = "flex";
+
+      // 背景クリックで閉じる処理を追加
+      const backdrop = modal.querySelector(".modal-backdrop");
+      backdrop.onclick = () => {
+        modal.style.display = "none";
+      };
+    }
+
   </script>
-  <script>
-    renderPanels();
-  </script>
+  <!-- 操作用モーダル -->
+  <div id="operation-modal" style="display:none;">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <h2 class="modal-title">他の操作</h2>
+      <div class="modal-tabs">
+        <button data-mode="add" class="tab-btn active">注文追加</button>
+        <button data-mode="edit" class="tab-btn">注文編集</button>
+        <button data-mode="delete" class="tab-btn">注文削除</button>
+        <button data-mode="reload" class="tab-btn">データ更新</button>
+      </div>
+      <div class="modal-body">
+        <!-- 各操作の中身はJSで切り替え -->
+      </div>
+      <div class="modal-footer">
+        <button id="modal-cancel">キャンセル</button>
+        <button id="modal-confirm">実行</button>
+      </div>
+    </div>
+  </div>
 </body>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    renderPanels();
+  });
+</script>
 </html>
