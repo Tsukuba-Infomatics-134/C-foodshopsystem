@@ -56,6 +56,13 @@
       font-size: 2em;
       font-weight: bold;
       margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 10px;
+      height: 28px;
+      margin-top: 0;
+      margin-bottom: 0;
     }
     table {
       border-collapse: collapse;
@@ -152,9 +159,121 @@
       margin-top: 8px;
       margin-bottom: 0;
     }
+    #custom-confirm {
+      position: fixed;
+      z-index: 10000;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .confirm-backdrop {
+      position: absolute;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.15);
+      z-index: 0;
+    }
+    .confirm-dialog {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+      padding: 32px 32px 24px 32px;
+      min-width: 320px;
+      text-align: center;
+      z-index: 1;
+      pointer-events: auto;
+    }
+    .confirm-title {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 24px;
+    }
+    .confirm-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+    .other-btn {
+      background: #eee;
+      color: #333;
+      border: 1.5px solid #bbb;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: normal;
+      padding: 2px 10px;
+      margin-left: 8px;
+      cursor: pointer;
+      transition: background 0.2s, border 0.2s;
+      min-width: 0;
+      height: 28px;
+      line-height: 1.2;
+      box-sizing: border-box;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+    .other-btn:hover {
+      background: #ddd;
+      border-color: #888;
+    }
+
+    /* 調理完了ボタン */
+    .done-btn {
+      background: #ff6b6b;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1em;
+      font-weight: bold;
+      padding: 8px 28px;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+    .done-btn:hover {
+      background: #e55454 !important;
+    }
+
+    /* カスタムダイアログのはい・いいえ */
+    #confirm-yes {
+      background: #ff6b6b;
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.1em;
+      padding: 8px 32px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #confirm-yes:hover {
+      background: #e55454 !important;
+    }
+    #confirm-no {
+      background: #eee;
+      color: #333;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.1em;
+      padding: 8px 24px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #confirm-no:hover {
+      background: #ccc !important;
+    }
   </style>
 </head>
 <body>
+  <div id="custom-confirm" style="display:none;">
+    <div class="confirm-backdrop"></div>
+    <div class="confirm-dialog">
+      <div class="confirm-title">調理完了しましたか？</div>
+      <div class="confirm-buttons">
+        <button id="confirm-no">いいえ</button>
+        <button id="confirm-yes">はい</button>
+      </div>
+    </div>
+  </div>
   <div class="class-grid" id="classGrid"></div>
   <script>
     // クラスごとの商品名
@@ -204,6 +323,44 @@
       }
     ];
 
+    // カスタムダイアログ関数
+    function showCustomConfirm(message, onYes, anchorElem) {
+      const dialog = document.getElementById('custom-confirm');
+      dialog.querySelector('.confirm-title').innerHTML = message;
+      dialog.style.display = 'flex';
+
+      if (anchorElem) {
+        // anchorElem(パネル)の位置取得
+        const rect = anchorElem.getBoundingClientRect();
+        const dialogBox = dialog.querySelector('.confirm-dialog');
+        dialog.style.position = 'fixed';
+        dialog.style.alignItems = 'flex-start';
+        dialog.style.justifyContent = 'flex-start';
+        dialog.style.left = '0';
+        dialog.style.top = '0';
+        // ダイアログをパネルの中央に配置
+        dialogBox.style.position = 'absolute';
+        dialogBox.style.left = `${rect.left + rect.width / 2 - dialogBox.offsetWidth / 2}px`;
+        dialogBox.style.top = `${rect.top + rect.height / 2 - dialogBox.offsetHeight / 2}px`;
+      } else {
+        dialog.style.position = '';
+        dialog.style.alignItems = '';
+        dialog.style.justifyContent = '';
+        dialog.style.left = '';
+        dialog.style.top = '';
+        dialog.querySelector('.confirm-dialog').style.position = '';
+        dialog.querySelector('.confirm-dialog').style.left = '';
+        dialog.querySelector('.confirm-dialog').style.top = '';
+      }
+
+      // ボタンイベント
+      const yesBtn = document.getElementById('confirm-yes');
+      const noBtn = document.getElementById('confirm-no');
+      const close = () => { dialog.style.display = 'none'; };
+      noBtn.onclick = close;
+      yesBtn.onclick = () => { close(); onYes(); };
+    }
+
     // パネル生成
     function renderPanels() {
       const grid = document.getElementById("classGrid");
@@ -217,57 +374,10 @@
         if (labels.name === "1組") panel.classList.add("bg-red");
         if (labels.name === "6組") panel.classList.add("bg-yellow");
 
-        // テーブル部
-        const tableWrap = document.createElement("div");
-        tableWrap.className = "class-table-wrap";
-        tableWrap.innerHTML = `
-          <div class="class-table-title">${labels.name}</div>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>注文時間</th>
-                <th>${labels.items[0]}</th>
-                <th>${labels.items[1]}</th>
-                <th>ステータス</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${
-                Object.entries(classData)
-                  // ステータス順に並べ替え
-                  .sort(([, a], [, b]) => {
-                    const statusOrder = {
-                      "支払い済み": 0,
-                      "呼び出し中": 1,
-                      "呼び出し前": 2,
-                      "調理済み": 3
-                    };
-                    return statusOrder[a.status] - statusOrder[b.status];
-                  })
-                  .map(([id, order]) => {
-                    let rowClass = "";
-                    if (order.status === "呼び出し前") rowClass = "status-before";
-                    else if (order.status === "呼び出し中") rowClass = "status-calling";
-                    else if (order.status === "支払い済み") rowClass = "status-paid";
-                    else if (order.status === "調理済み") rowClass = "status-cooked";
-                    return `
-                      <tr class="${rowClass}">
-                        <td>${id}</td>
-                        <td>${new Date(order.ordered_at).toLocaleString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
-                        <td>${order.order_item[labels.items[0]]}</td>
-                        <td>${order.order_item[labels.items[1]]}</td>
-                        <td class="status-cell">${order.status}</td>
-                      </tr>
-                    `;
-                  }).join("")
-              }
-            </tbody>
-          </table>
-        `;
+        
         let sumA = 0, sumB = 0;
         Object.values(classData).forEach(order => {
-          if (order.status === "支払い済み" || order.status === "調理済み") {
+          if (order.status === "支払い済み") {
             sumA += order.order_item[labels.items[0]];
             sumB += order.order_item[labels.items[1]];
           }
@@ -301,27 +411,119 @@
         itemB.innerHTML = `${labels.items[1]}<span class="summary-num">${sumB}個</span>`;
         side.appendChild(itemB);
 
+        // テーブルタイトル部
+        const tableTitleDiv = document.createElement("div");
+        tableTitleDiv.className = "class-table-title";
+        tableTitleDiv.style.display = "flex";
+        tableTitleDiv.style.justifyContent = "space-between";
+        tableTitleDiv.style.alignItems = "center";
+
+        // クラス名
+        const classNameSpan = document.createElement("span");
+        classNameSpan.textContent = labels.name;
+
         // 他の操作ボタン
         const otherBtn = document.createElement("button");
         otherBtn.textContent = "他の操作";
         otherBtn.className = "other-btn";
-        side.appendChild(otherBtn);
+        otherBtn.title = "他の操作";
+
+        // タイトル部に追加
+        tableTitleDiv.appendChild(classNameSpan);
+        tableTitleDiv.appendChild(otherBtn);
+
+        // テーブル部
+        const tableWrap = document.createElement("div");
+        tableWrap.className = "class-table-wrap";
+        tableWrap.appendChild(tableTitleDiv);
+        tableWrap.innerHTML += `
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>注文時間</th>
+                <th>${labels.items[0]}</th>
+                <th>${labels.items[1]}</th>
+                <th>ステータス</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                Object.entries(classData)
+                  .sort(([, a], [, b]) => {
+                    const statusOrder = {
+                      "支払い済み": 0,
+                      "呼び出し中": 1,
+                      "呼び出し前": 2,
+                      "調理済み": 3
+                    };
+                    return statusOrder[a.status] - statusOrder[b.status];
+                  })
+                  .map(([id, order]) => {
+                    let rowClass = "";
+                    if (order.status === "呼び出し前") rowClass = "status-before";
+                    else if (order.status === "呼び出し中") rowClass = "status-calling";
+                    else if (order.status === "支払い済み") rowClass = "status-paid";
+                    else if (order.status === "調理済み") rowClass = "status-cooked";
+                    return `
+                      <tr class="${rowClass}">
+                        <td>${id}</td>
+                        <td>${new Date(order.ordered_at).toLocaleString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
+                        <td>${order.order_item[labels.items[0]]}</td>
+                        <td>${order.order_item[labels.items[1]]}</td>
+                        <td class="status-cell">${order.status}</td>
+                      </tr>
+                    `;
+                  }).join("")
+              }
+            </tbody>
+          </table>
+        `;
 
         // 調理完了ボタン
         const doneBtn = document.createElement("button");
         doneBtn.textContent = "調理完了";
+        doneBtn.style.margin = "24px auto 12px auto";
+        doneBtn.style.display = "block";
+        doneBtn.style.fontSize = "1.3em";
+        doneBtn.style.fontWeight = "bold";
+        doneBtn.style.background = "#ff6b6b";
+        doneBtn.style.color = "#fff";
+        doneBtn.style.border = "none";
+        doneBtn.style.borderRadius = "16px";
+        doneBtn.style.padding = "12px 40px";
         doneBtn.className = "done-btn";
         doneBtn.onclick = () => {
+          // 支払い済みの商品を集計
+          let items = [];
           Object.values(classData).forEach(order => {
             if (order.status === "支払い済み") {
-              order.status = "調理済み";
+              Object.entries(order.order_item).forEach(([name, count]) => {
+                if (count > 0) {
+                  const found = items.find(i => i.name === name);
+                  if (found) found.count += count;
+                  else items.push({ name, count });
+                }
+              });
             }
           });
-          renderPanels();
+          let itemHtml = items.length
+            ? items.map(i => `${i.name} <b>${i.count}個</b>`).join('<br>')
+            : '<span style="color:#888;">（該当なし）</span>';
+          const msg = `<b>${labels.name}</b><br>${itemHtml}<br>調理完了していいですか？`;
+          showCustomConfirm(msg, () => {
+            Object.values(classData).forEach(order => {
+              if (order.status === "支払い済み") {
+                order.status = "調理済み";
+              }
+            });
+            renderPanels();
+          }, panel);
         };
-        side.appendChild(doneBtn);
 
         panel.appendChild(tableWrap);
+
+        panel.appendChild(doneBtn);
         panel.appendChild(side);
         grid.appendChild(panel);
       });
