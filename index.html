@@ -267,296 +267,7 @@
 
     <script>
       // --- データ ---
-      const allClassData = [
-        // 1組: プレーン・抹茶
-        {
-          1: {
-            ordered_at: Date.now() - 3600000,
-            order_item: { プレーン: 1, 抹茶: 3 },
-            status: "呼び出し前",
-          },
-          2: {
-            ordered_at: Date.now() - 3500000,
-            order_item: { プレーン: 3, 抹茶: 0 },
-            status: "呼び出し中",
-          },
-          3: {
-            ordered_at: Date.now() - 3400000,
-            order_item: { プレーン: 1, 抹茶: 0 },
-            status: "支払い済み",
-          },
-          4: {
-            ordered_at: Date.now() - 3300000,
-            order_item: { プレーン: 2, 抹茶: 4 },
-            status: "調理済み",
-          },
-          5: {
-            ordered_at: Date.now() - 3200000,
-            order_item: { プレーン: 1, 抹茶: 1 },
-            status: "呼び出し前",
-          },
-          6: {
-            ordered_at: Date.now() - 3100000,
-            order_item: { プレーン: 2, 抹茶: 2 },
-            status: "支払い済み",
-          },
-          7: {
-            ordered_at: Date.now() - 3000000,
-            order_item: { プレーン: 4, 抹茶: 0 },
-            status: "呼び出し前",
-          },
-          8: {
-            ordered_at: Date.now() - 2900000,
-            order_item: { プレーン: 0, 抹茶: 1 },
-            status: "支払い済み",
-          },
-          9: {
-            ordered_at: Date.now() - 2800000,
-            order_item: { プレーン: 2, 抹茶: 1 },
-            status: "呼び出し中",
-          },
-        },
-        // 2組: プレーン・チーズ
-        {
-          1: {
-            ordered_at: Date.now() - 3600000,
-            order_item: { プレーン: 1, チーズ: 3 },
-            status: "呼び出し前",
-          },
-          2: {
-            ordered_at: Date.now() - 3500000,
-            order_item: { プレーン: 3, チーズ: 0 },
-            status: "呼び出し中",
-          },
-          3: {
-            ordered_at: Date.now() - 3400000,
-            order_item: { プレーン: 1, チーズ: 0 },
-            status: "支払い済み",
-          },
-          4: {
-            ordered_at: Date.now() - 3300000,
-            order_item: { プレーン: 2, チーズ: 4 },
-            status: "調理済み",
-          },
-          5: {
-            ordered_at: Date.now() - 3200000,
-            order_item: { プレーン: 1, チーズ: 1 },
-            status: "呼び出し前",
-          },
-          6: {
-            ordered_at: Date.now() - 3100000,
-            order_item: { プレーン: 2, チーズ: 2 },
-            status: "支払い済み",
-          },
-          7: {
-            ordered_at: Date.now() - 3000000,
-            order_item: { プレーン: 4, チーズ: 0 },
-            status: "呼び出し前",
-          },
-          8: {
-            ordered_at: Date.now() - 2900000,
-            order_item: { プレーン: 0, チーズ: 1 },
-            status: "支払い済み",
-          },
-          9: {
-            ordered_at: Date.now() - 2800000,
-            order_item: { プレーン: 2, チーズ: 1 },
-            status: "呼び出し中",
-          },
-        },
-        // 3組: プレーン・みたらし
-        {
-          1: {
-            ordered_at: Date.now() - 3600000,
-            order_item: { プレーン: 1, みたらし: 3 },
-            status: "呼び出し前",
-          },
-          2: {
-            ordered_at: Date.now() - 3500000,
-            order_item: { プレーン: 3, みたらし: 0 },
-            status: "呼び出し中",
-          },
-          3: {
-            ordered_at: Date.now() - 3400000,
-            order_item: { プレーン: 1, みたらし: 0 },
-            status: "支払い済み",
-          },
-          4: {
-            ordered_at: Date.now() - 3300000,
-            order_item: { プレーン: 2, みたらし: 4 },
-            status: "調理済み",
-          },
-          5: {
-            ordered_at: Date.now() - 3200000,
-            order_item: { プレーン: 1, みたらし: 1 },
-            status: "呼び出し前",
-          },
-          6: {
-            ordered_at: Date.now() - 3100000,
-            order_item: { プレーン: 2, みたらし: 2 },
-            status: "支払い済み",
-          },
-          7: {
-            ordered_at: Date.now() - 3000000,
-            order_item: { プレーン: 4, みたらし: 0 },
-            status: "呼び出し前",
-          },
-          8: {
-            ordered_at: Date.now() - 2900000,
-            order_item: { プレーン: 0, みたらし: 1 },
-            status: "支払い済み",
-          },
-          9: {
-            ordered_at: Date.now() - 2800000,
-            order_item: { プレーン: 2, みたらし: 1 },
-            status: "呼び出し中",
-          },
-        },
-        // 4組: プレーン・マンゴー
-        {
-          1: {
-            ordered_at: Date.now() - 3600000,
-            order_item: { プレーン: 1, マンゴー: 3 },
-            status: "呼び出し前",
-          },
-          2: {
-            ordered_at: Date.now() - 3500000,
-            order_item: { プレーン: 3, マンゴー: 0 },
-            status: "呼び出し中",
-          },
-          3: {
-            ordered_at: Date.now() - 3400000,
-            order_item: { プレーン: 1, マンゴー: 0 },
-            status: "支払い済み",
-          },
-          4: {
-            ordered_at: Date.now() - 3300000,
-            order_item: { プレーン: 2, マンゴー: 4 },
-            status: "調理済み",
-          },
-          5: {
-            ordered_at: Date.now() - 3200000,
-            order_item: { プレーン: 1, マンゴー: 1 },
-            status: "呼び出し前",
-          },
-          6: {
-            ordered_at: Date.now() - 3100000,
-            order_item: { プレーン: 2, マンゴー: 2 },
-            status: "支払い済み",
-          },
-          7: {
-            ordered_at: Date.now() - 3000000,
-            order_item: { プレーン: 4, マンゴー: 0 },
-            status: "呼び出し前",
-          },
-          8: {
-            ordered_at: Date.now() - 2900000,
-            order_item: { プレーン: 0, マンゴー: 1 },
-            status: "支払い済み",
-          },
-          9: {
-            ordered_at: Date.now() - 2800000,
-            order_item: { プレーン: 2, マンゴー: 1 },
-            status: "呼び出し中",
-          },
-        },
-        // 5組: コンソメ・バター醤油
-        {
-          1: {
-            ordered_at: Date.now() - 3600000,
-            order_item: { コンソメ: 1, バター醤油: 3 },
-            status: "呼び出し前",
-          },
-          2: {
-            ordered_at: Date.now() - 3500000,
-            order_item: { コンソメ: 3, バター醤油: 0 },
-            status: "呼び出し中",
-          },
-          3: {
-            ordered_at: Date.now() - 3400000,
-            order_item: { コンソメ: 1, バター醤油: 0 },
-            status: "支払い済み",
-          },
-          4: {
-            ordered_at: Date.now() - 3300000,
-            order_item: { コンソメ: 2, バター醤油: 4 },
-            status: "調理済み",
-          },
-          5: {
-            ordered_at: Date.now() - 3200000,
-            order_item: { コンソメ: 1, バター醤油: 1 },
-            status: "呼び出し前",
-          },
-          6: {
-            ordered_at: Date.now() - 3100000,
-            order_item: { コンソメ: 2, バター醤油: 2 },
-            status: "支払い済み",
-          },
-          7: {
-            ordered_at: Date.now() - 3000000,
-            order_item: { コンソメ: 4, バター醤油: 0 },
-            status: "呼び出し前",
-          },
-          8: {
-            ordered_at: Date.now() - 2900000,
-            order_item: { コンソメ: 0, バター醤油: 1 },
-            status: "支払い済み",
-          },
-          9: {
-            ordered_at: Date.now() - 2800000,
-            order_item: { コンソメ: 2, バター醤油: 1 },
-            status: "呼び出し中",
-          },
-        },
-        // 6組: 明太チーズ・プレーン
-        {
-          1: {
-            ordered_at: Date.now() - 3600000,
-            order_item: { 明太チーズ: 1, プレーン: 3 },
-            status: "呼び出し前",
-          },
-          2: {
-            ordered_at: Date.now() - 3500000,
-            order_item: { 明太チーズ: 3, プレーン: 0 },
-            status: "呼び出し中",
-          },
-          3: {
-            ordered_at: Date.now() - 3400000,
-            order_item: { 明太チーズ: 5, プレーン: 0 },
-            status: "支払い済み",
-          },
-          4: {
-            ordered_at: Date.now() - 3300000,
-            order_item: { 明太チーズ: 2, プレーン: 4 },
-            status: "調理済み",
-          },
-          5: {
-            ordered_at: Date.now() - 3200000,
-            order_item: { 明太チーズ: 1, プレーン: 1 },
-            status: "呼び出し前",
-          },
-          6: {
-            ordered_at: Date.now() - 3100000,
-            order_item: { 明太チーズ: 2, プレーン: 2 },
-            status: "支払い済み",
-          },
-          7: {
-            ordered_at: Date.now() - 3000000,
-            order_item: { 明太チーズ: 4, プレーン: 0 },
-            status: "呼び出し前",
-          },
-          8: {
-            ordered_at: Date.now() - 2900000,
-            order_item: { 明太チーズ: 0, プレーン: 1 },
-            status: "支払い済み",
-          },
-          9: {
-            ordered_at: Date.now() - 2800000,
-            order_item: { 明太チーズ: 2, プレーン: 1 },
-            status: "呼び出し中",
-          },
-        },
-      ];
+      const allClassData = {};
 
       // クラスごとの商品名
       const classLabels = [
@@ -567,17 +278,6 @@
         { name: "5組", items: ["コンソメ", "バター醤油"] },
         { name: "6組", items: ["明太チーズ", "プレーン"] },
       ];
-
-      // パスワード（例：全て "pass" でOK。必要に応じて変更可）
-      const classPasswords = [
-        "pass1",
-        "pass2",
-        "pass3",
-        "pass4",
-        "pass5",
-        "pass6",
-      ];
-      const operatorPassword = "sosaPass";
 
       const apiurl = "https://api.yaakiyu.f5.si/";
       let auth_key = null;
@@ -608,31 +308,8 @@
 
       // ログイン処理
       document.getElementById("login-form").onsubmit = function () {
-        const selectedValue = document.getElementById("class-select").value;
         const pass = document.getElementById("class-pass").value;
         const errorDiv = document.getElementById("login-error");
-
-        if (!selectedValue) {
-          errorDiv.textContent = "クラスを選択してください";
-          return false;
-        }
-        if (selectedValue === "0") {
-          // 操作用ログイン
-          if (pass === operatorPassword) {
-            errorDiv.textContent = "";
-            window.open("sosa.html", "_blank");
-            return false; // ログイン画面は残す
-          } else {
-            errorDiv.textContent = "パスワードが違います";
-            return false;
-          }
-        }
-
-        const classIdx = parseInt(selectedValue, 10) - 1;
-        if (classIdx < 0 || classIdx >= classPasswords.length) {
-          errorDiv.textContent = "クラスを選択してください";
-          return false;
-        }
 
         fetch(apiurl + "login", {
           method: "GET",
@@ -662,43 +339,32 @@
             auth_key = data["token"];
             classnum = data["user"];
             // ログイン成功
-            //選択したものと違ったら返す
-            if (classnum != classIdx + 1) {
-              alert("選択したクラスが違います");
-              console.log(classnum);
-              console.log(classIdx);
-              return;
-            }
             errorDiv.textContent = "";
             document.getElementById("login-wrap").style.display = "none";
             document.getElementById("main-wrap").style.display = "flex";
 
-            // document.querySelector("h1").innerHTML += ` ${classnum}組`;
-            // document.getElementById("login").style.display = "none";
-            // document.getElementById("main").style.display = "block";
-            // // document.getElementById("pass").value = "";
-            // document.getElementById("status").innerHTML = data["user"];
-            // document.getElementById("log").innerHTML = "";
-            // document.getElementById("type_").innerHTML = data["type"];
             const checkInterval = () => {
               check().then(async (ret) => {
                 console.log("checked", ret);
-                if (ret != null && ret.length > 0) {
-                  //ここに更新時の挙動を書く
-                  // retの内容をallClassData[classIdx]にマージ（連結）
-                  if (ret && typeof ret === "object") {
-                    for (const key in ret) {
-                      allClassData[classIdx][key] = ret[key];
-                    }
+                for (const key in ret) {
+                  if (!allClassData[ret[key]["order_id"]]) {
+                    allClassData[ret[key]["order_id"]] = {
+                      ordered_at: ret[key]["timestamp"],
+                      order_items: ret[key]["order_items"],
+                      status: ret[key]["status"],
+                      history: []
+                    };
                   }
-                  showClassTable(classIdx);
+                  allClassData[ret[key]["order_id"]]["status"] = ret[key]["status"];
+                  allClassData[ret[key]['order_id']]["history"].push(ret[key]);
                 }
-                if (isLogin) {
-                  //Cはcheckを送る。
-                  setTimeout(() => {
-                    checkInterval();
-                  }, 1000);
+                if (ret.length > 0) {
+                  showClassTable(classnum);
                 }
+                //Cはcheckを送る。
+                setTimeout(() => {
+                  if (isLogin) {checkInterval();}
+                }, 1000);
               });
             };
             checkInterval();
@@ -723,35 +389,27 @@
                 if (ret == null) {
                   return;
                 }
-                allClassData[classIdx] = ret;
-                showClassTable(classIdx);
-                // callingCodes = [];
-                // waitingCodes = [];
-                // for (const key in ret) {
-                //   console.log(key, ret[key].status);
-                //   if (ret[key].status === "呼び出し中") {
-                //     callingCodes.push(parseInt(key));
-                //   } else if (ret[key].status === "呼び出し待ち") {
-                //     waitingCodes.push(parseInt(key));
-                //   }
-                // }
+                for (const key in ret) {
+                  allClassData[key] = {
+                    ordered_at: null,  // これはXが悪いです　まことに申し訳なき
+                    order_items: ret[key]["order_items"],
+                    status: ret[key]["status"],
+                    history: ret[key]["history"]
+                  }
+                }
+                showClassTable(classnum);
               });
           })
           .catch((error) => {
             console.error("Error:", error);
             alert("ログイン中にエラーが発生しました。");
           });
-        // if (pass !== classPasswords[classIdx]) {
-        //   errorDiv.textContent = "パスワードが違います";
-        //   return false;
-        // }
 
         return false;
       };
 
       // 表示処理
       function showClassTable(classIdx) {
-        const jsonData = allClassData[classIdx];
         const labels = classLabels[classIdx];
         document.getElementById("class-title").textContent = labels.name;
 
@@ -761,10 +419,10 @@
         const oldTable = container.querySelector("table");
         if (oldTable) oldTable.remove();
 
-        container.appendChild(createOrderTable(jsonData, labels.items));
+        container.appendChild(createOrderTable(allClassData, labels.items));
 
         // 総数
-        const summary = getPaidTotals(jsonData, labels.items);
+        const summary = getPaidTotals(allClassData, labels.items);
         document.getElementById(
           "summary-container"
         ).innerHTML = `<div class="summary-item">${labels.items[0]}<br><span class="summary-num">${summary[0]}個</span></div>
@@ -772,7 +430,7 @@
       }
 
       // テーブル生成
-      function createOrderTable(data, items) {
+      function createOrderTable(orders, items) {
         const table = document.createElement("table");
         const headers = ["番号", "注文時間", items[0], items[1]];
         const thead = table.createTHead();
@@ -784,7 +442,6 @@
         });
 
         const tbody = table.createTBody();
-        const orders = data;
 
         // 支払い済みの行が上に来るようにソート
         const sortedOrderNos = Object.keys(orders).sort((a, b) => {
