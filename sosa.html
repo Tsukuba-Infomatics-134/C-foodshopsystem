@@ -379,9 +379,6 @@
   </style>
 </head>
 <body> 
-  <div style="padding: 12px;">
-    <button class="other-btn" onclick="updateAllClasses()">更新</button>
-  </div>
   <div id="custom-confirm" style="display:none;">
     <div class="confirm-backdrop"></div>
     <div class="confirm-dialog">
@@ -478,6 +475,22 @@
 
     panelHeader.appendChild(classNameSpan);
     panelHeader.appendChild(btnGroup);
+
+    // 1と2の同時押しで更新
+    const pressedKeys = new Set();
+
+    document.addEventListener("keydown", (e) => {
+      pressedKeys.add(e.key);
+      if (pressedKeys.has("1") && pressedKeys.has("2")) {
+        updateAllClasses();
+      }
+    });
+
+    document.addEventListener("keyup", (e) => {
+      pressedKeys.delete(e.key);
+    });
+
+
 
     // カスタムダイアログ関数
     function showCustomConfirm(message, onYes, anchorElem) {
@@ -865,6 +878,23 @@
       };
     }
 
+    function updateAllClasses() {
+      console.log("全クラスのデータを更新します");
+      renderPanels();
+      showUpdateMessage();
+    }
+
+    function showUpdateMessage() {
+      const msg = document.getElementById("update-message");
+      msg.style.opacity = "1";
+
+      setTimeout(() => {
+        msg.style.opacity = "0";
+      }, 1800); // 約2秒でフェードアウト
+    }
+
+
+
   </script>
   <!-- 操作用モーダル -->
   <div id="operation-modal" style="display:none;">
@@ -886,6 +916,25 @@
       </div>
     </div>
   </div>
+  <div id="update-message" style="
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 1.1em;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.5s;
+    z-index: 9999;
+    pointer-events: none;
+  ">
+    更新しました
+  </div>
+
 </body>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
