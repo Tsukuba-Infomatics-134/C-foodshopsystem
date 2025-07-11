@@ -371,10 +371,17 @@
       z-index: 1;
     }
 
+    .panel-header {
+      margin-bottom: 8px;
+    }
+
 
   </style>
 </head>
-<body>
+<body> 
+  <div style="padding: 12px;">
+    <button class="other-btn" onclick="updateAllClasses()">更新</button>
+  </div>
   <div id="custom-confirm" style="display:none;">
     <div class="confirm-backdrop"></div>
     <div class="confirm-dialog">
@@ -436,6 +443,41 @@
 
     const sortByIdFlags = [false, false, false]; // クラスごとのソート状態
 
+    // --- クラスパネルの最上部ヘッダー（クラス名・ソート・操作） --- //
+    const panelHeader = document.createElement("div");
+    panelHeader.className = "panel-header";
+    panelHeader.style.display = "flex";
+    panelHeader.style.justifyContent = "space-between";
+    panelHeader.style.alignItems = "center";
+    panelHeader.style.width = "100%";
+    panelHeader.style.marginBottom = "8px";
+
+    const classNameSpan = document.createElement("span");
+    classNameSpan.textContent = labels.name;
+    classNameSpan.style.fontWeight = "bold";
+    classNameSpan.style.fontSize = "1.4em";
+
+    const btnGroup = document.createElement("div");
+
+    const sortBtn = document.createElement("button");
+    sortBtn.textContent = sortByIdFlags[idx] ? "ステータス順" : "ID順";
+    sortBtn.className = "other-btn";
+    sortBtn.title = "ID順に並べ替え";
+    sortBtn.addEventListener("click", () => {
+      sortByIdFlags[idx] = !sortByIdFlags[idx];
+      renderPanels();
+    });
+
+    const otherBtn = document.createElement("button");
+    otherBtn.textContent = "他の操作";
+    otherBtn.className = "other-btn";
+    otherBtn.addEventListener("click", () => openOperationModal(idx));
+
+    btnGroup.appendChild(sortBtn);
+    btnGroup.appendChild(otherBtn);
+
+    panelHeader.appendChild(classNameSpan);
+    panelHeader.appendChild(btnGroup);
 
     // カスタムダイアログ関数
     function showCustomConfirm(message, onYes, anchorElem) {
@@ -488,14 +530,42 @@
         if (labels.name === "1組") panel.classList.add("bg-red");
         if (labels.name === "6組") panel.classList.add("bg-yellow");
 
-        let sumA = 0, sumB = 0;
-        Object.values(classData).forEach(order => {
-          if (order.status === "支払い済み") {
-            sumA += order.order_item[labels.items[0]];
-            sumB += order.order_item[labels.items[1]];
-          }
+        // --- パネル上部のヘッダー部分（クラス名・ボタン） --- //
+        const panelHeader = document.createElement("div");
+        panelHeader.className = "panel-header";
+        panelHeader.style.display = "flex";
+        panelHeader.style.justifyContent = "space-between";
+        panelHeader.style.alignItems = "center";
+        panelHeader.style.width = "100%";
+
+        const classNameSpan = document.createElement("span");
+        classNameSpan.textContent = labels.name;
+        classNameSpan.style.fontWeight = "bold";
+        classNameSpan.style.fontSize = "1.4em";
+
+        const btnGroup = document.createElement("div");
+
+        const sortBtn = document.createElement("button");
+        sortBtn.textContent = sortByIdFlags[idx] ? "ステータス順" : "ID順";
+        sortBtn.className = "other-btn";
+        sortBtn.title = "ID順に並べ替え";
+        sortBtn.addEventListener("click", () => {
+          sortByIdFlags[idx] = !sortByIdFlags[idx];
+          renderPanels();
         });
 
+        const otherBtn = document.createElement("button");
+        otherBtn.textContent = "他の操作";
+        otherBtn.className = "other-btn";
+        otherBtn.addEventListener("click", () => openOperationModal(idx));
+
+        btnGroup.appendChild(sortBtn);
+        btnGroup.appendChild(otherBtn);
+
+        panelHeader.appendChild(classNameSpan);
+        panelHeader.appendChild(btnGroup);
+
+        // --- サイド情報（合計や完了バッジ） --- //
         const side = document.createElement("div");
         side.className = "side-info";
         const isAllDone = Object.values(classData).every(order => order.status === "調理済み");
@@ -511,6 +581,14 @@
         label.textContent = "現在調理中：";
         side.appendChild(label);
 
+        let sumA = 0, sumB = 0;
+        Object.values(classData).forEach(order => {
+          if (order.status === "支払い済み") {
+            sumA += order.order_item[labels.items[0]];
+            sumB += order.order_item[labels.items[1]];
+          }
+        });
+
         const itemA = document.createElement("div");
         itemA.className = "summary-item";
         itemA.innerHTML = `${labels.items[0]}<span class="summary-num">${sumA}個</span>`;
@@ -521,68 +599,14 @@
         itemB.innerHTML = `${labels.items[1]}<span class="summary-num">${sumB}個</span>`;
         side.appendChild(itemB);
 
-        const tableTitleDiv = document.createElement("div");
-        tableTitleDiv.className = "class-table-title";
-
-        const updateBtn = document.createElement("button");
-        updateBtn.textContent = "更新";
-        updateBtn.className = "other-btn";
-        updateBtn.title = "データを追加";
-        updateBtn.addEventListener("click", () => {
-          allClassData.forEach((classData, cidx) => {
-            const items = classLabels[cidx].items;
-            const nextId = () => Math.max(0, ...Object.keys(classData).map(Number)) + 1;
-            const id1 = nextId();
-            const id2 = id1 + 1;
-            classData[id1] = {
-              ordered_at: Date.now(),
-              order_item: { [items[0]]: 1, [items[1]]: 2 },
-              status: "支払い済み"
-            };
-            classData[id2] = {
-              ordered_at: Date.now(),
-              order_item: { [items[0]]: 2, [items[1]]: 1 },
-              status: "呼び出し前"
-            };
-          });
-          renderPanels(); // 再描画
-        });
-
-        const classNameSpan = document.createElement("span");
-        classNameSpan.textContent = labels.name;
-        const otherBtn = document.createElement("button");
-        otherBtn.textContent = "他の操作";
-        otherBtn.className = "other-btn";
-        otherBtn.title = "他の操作";
-        otherBtn.addEventListener("click", () => {
-          console.log("他の操作ボタン押されました", idx);
-          openOperationModal(idx);
-        });
-        const sortBtn = document.createElement("button");
-        sortBtn.textContent = sortByIdFlags[idx] ? "ステータス順" : "ID順";
-        sortBtn.className = "other-btn";
-        sortBtn.title = "ID順に並べ替え";
-        sortBtn.addEventListener("click", () => {
-          sortByIdFlags[idx] = !sortByIdFlags[idx]; // 状態を切り替え
-          renderPanels(); // 再描画
-        });
-
-        tableTitleDiv.appendChild(sortBtn);
-        tableTitleDiv.appendChild(classNameSpan);
-        tableTitleDiv.appendChild(otherBtn);
-        tableTitleDiv.appendChild(updateBtn);
-
-
+        // --- テーブル --- //
         const tableWrap = document.createElement("div");
         tableWrap.className = "class-table-wrap";
-        tableWrap.appendChild(tableTitleDiv);
 
-        // ← テーブル部分はスクロール可能にするため、ラッパーで囲む
         const tableInner = document.createElement("div");
         tableInner.className = "class-table-inner";
 
         const table = document.createElement("table");
-        // ...thead, tbody作成は今まで通り
 
         const thead = document.createElement("thead");
         thead.innerHTML = `
@@ -598,19 +622,19 @@
 
         const tbody = document.createElement("tbody");
         Object.entries(classData)
-        .sort((a, b) => {
-          if (sortByIdFlags[idx]) {
-            return Number(a[0]) - Number(b[0]); // ID順
-          } else {
-            const statusOrder = {
-              "支払い済み": 0,
-              "呼び出し中": 1,
-              "呼び出し前": 2,
-              "調理済み": 3
-            };
-            return statusOrder[a[1].status] - statusOrder[b[1].status]; // ステータス順
-          }
-        })
+          .sort((a, b) => {
+            if (sortByIdFlags[idx]) {
+              return Number(a[0]) - Number(b[0]); // ID順
+            } else {
+              const statusOrder = {
+                "支払い済み": 0,
+                "呼び出し中": 1,
+                "呼び出し前": 2,
+                "調理済み": 3
+              };
+              return statusOrder[a[1].status] - statusOrder[b[1].status]; // ステータス順
+            }
+          })
           .forEach(([id, order]) => {
             const row = document.createElement("tr");
             row.className = {
@@ -622,25 +646,23 @@
 
             row.innerHTML = `
               <td class="col-id">${id}</td>
-              <td class="col-time">${new Date(order.ordered_at).toLocaleString('ja-JP', { hour: '2-digit', minute: '2-digit'})}</td>
+              <td class="col-time">${new Date(order.ordered_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</td>
               <td class="col-item">${order.order_item[labels.items[0]]}</td>
               <td class="col-item">${order.order_item[labels.items[1]]}</td>
-              <td class="status-cell","col-status">${order.status}</td>
+              <td class="status-cell col-status">${order.status}</td>
             `;
             tbody.appendChild(row);
           });
 
-        table.appendChild(thead);
         table.appendChild(tbody);
         tableInner.appendChild(table);
-
         tableWrap.appendChild(tableInner);
 
+        // --- 調理完了ボタン --- //
         const doneBtn = document.createElement("button");
         doneBtn.textContent = "調理完了";
         doneBtn.className = "done-btn";
         doneBtn.onclick = () => {
-          console.log("調理完了ボタンが押されました");
           let items = [];
           Object.values(classData).forEach(order => {
             if (order.status === "支払い済み") {
@@ -653,6 +675,7 @@
               });
             }
           });
+
           let itemHtml = items.length
             ? items.map(i => `${i.name} <b>${i.count}個</b>`).join('<br>')
             : '<span style="color:#888;">（該当なし）</span>';
@@ -667,9 +690,11 @@
           }, panel);
         };
 
-        panel.appendChild(tableWrap);
+        // --- パネルへの追加順序 --- //
+        panel.appendChild(panelHeader);
         panel.appendChild(doneBtn);
         panel.appendChild(side);
+        panel.appendChild(tableWrap);
         grid.appendChild(panel);
       });
     }
