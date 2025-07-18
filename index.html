@@ -236,8 +236,6 @@
       <form class="login-box" id="login-form" onsubmit="return false;">
         <h2>PLEAAAAAAAAAAAAAAAAASE LOGIN</h2>
         <div class="login-error" id="login-error"></div>
-        <select id="class-select" required>
-        </select>
         <input
           type="password"
           id="class-pass"
@@ -344,18 +342,21 @@
                       ordered_at: ret[key]["timestamp"],
                       order_items: ret[key]["order_items"],
                       status: ret[key]["status"],
-                      history: []
+                      history: [],
                     };
                   }
-                  allClassData[ret[key]["order_id"]]["status"] = ret[key]["status"];
-                  allClassData[ret[key]['order_id']]["history"].push(ret[key]);
+                  allClassData[ret[key]["order_id"]]["status"] =
+                    ret[key]["status"];
+                  allClassData[ret[key]["order_id"]]["history"].push(ret[key]);
                 }
                 if (ret.length > 0) {
                   showClassTable(classnum);
                 }
                 //Cはcheckを送る。
                 setTimeout(() => {
-                  if (isLogin) {checkInterval();}
+                  if (isLogin) {
+                    checkInterval();
+                  }
                 }, 1000);
               });
             };
@@ -383,11 +384,11 @@
                 }
                 for (const key in ret) {
                   allClassData[key] = {
-                    ordered_at: null,  // これはXが悪いです　まことに申し訳なき
+                    ordered_at: null, // これはXが悪いです　まことに申し訳なき
                     order_items: ret[key]["order_items"],
                     status: ret[key]["status"],
-                    history: ret[key]["history"]
-                  }
+                    history: ret[key]["history"],
+                  };
                 }
                 showClassTable(classnum);
               });
