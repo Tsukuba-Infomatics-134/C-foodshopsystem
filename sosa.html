@@ -586,9 +586,8 @@
                 allClassData[ret[key]["order_id"]]["history"].push(ret[key]);
               }
               if (ret.length > 0) {
-                // showClassTable(classnum);
+                updateAllClasses();
               }
-              updateAllClasses();
 
               //Cはcheckを送る。
               setTimeout(() => {
