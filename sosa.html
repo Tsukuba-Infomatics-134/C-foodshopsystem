@@ -1,480 +1,690 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>調理室機　操作用</title>
-  <style>
-    body {
-      background: #fff;
-      font-family: 'sans-serif';
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      height: 100vh;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-    }
-    .class-grid {
-      flex: 1 1 auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 32px 16px;
-      padding: 24px;
-      align-items: stretch;
-      height: 100%;
-      box-sizing: border-box;
-    }
-    .class-panel {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      min-width: 0;
-      max-width: 600px;
-      height: 100%;
-      position: relative;
-      padding: 12px 12px 0px 12px;
-      box-sizing: border-box;
-    }
-    .class-panel.bg-red {
-      background: #ffeaea;
-    }
-    .class-panel.bg-yellow {
-      background: #fffbe0;
-    }
-    .class-table-title {
-      text-align: center;
-      font-size: 2em;
-      font-weight: bold;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 2px 10px;
-      height: 28px;
-      margin-top: 0;
-      margin-bottom: 0;
-    }
-    table {
-      table-layout: fixed;
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      border: 2px solid #000000;
-      padding: 6px 8px;
-      text-align: center !important;
-      white-space: nowrap;
-    }
-
-    /* 幅設定 */
-    .col-id     { width: 8%; }
-    .col-time   { width: 18%; }
-    .col-item   { width: 22%; } /* 商品1・2両方に */
-    .col-status { width: 35%; } /* ゆったりめ */
-
-    th {
-      background: #ffe066;
-      font-size: 16px;
-      font-weight: bold;
-      letter-spacing: 0.01em;
-    }
-    .status-cell {
-      font-size: 1em;
-      font-weight: normal;
-    }
-    .done-badge {
-      display: inline-block;
-      background: #ff6b6b;
-      color: #fff;
-      font-weight: bold;
-      border-radius: 20px;
-      padding: 6px 22px;
-      font-size: 1.2em;
-      margin-bottom: 12px;
-      margin-top: 8px;
-    }
-    .side-info {
-      width: 100%;
-      margin-left: 0;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: flex-end;
-      min-width: 0;
-      gap: 12px;
-      margin-bottom: 0;
-      margin-top: 0;
-    }
-    .side-info .summary-label {
-      font-size: 1em;
-      margin-bottom: 0;
-      margin-right: 4px;
-    }
-    .side-info .summary-item {
-      font-size: 1.1em;
-      font-weight: bold;
-      margin-bottom: 0;
-      letter-spacing: 0.05em;
-      margin-right: 4px;
-    }
-    .side-info .summary-num {
-      font-size: 1.1em;
-      font-weight: bold;
-      color: #222;
-      margin-left: 2px;
-    }
-    .side-info .done-badge {
-      margin-bottom: 0;
-      margin-top: 0;
-      margin-right: 8px;
-    }
-    .side-info .other-btn {
-      margin-top: 0;
-      margin-left: 8px;
-      padding: 6px 16px;
-      font-size: 0.95em;
-    }
-    
-    @media (max-width: 1400px) {
-      .class-grid {
-        grid-template-columns: 1fr 1fr;
+  <head>
+    <meta charset="UTF-8" />
+    <title>調理室機　操作用</title>
+    <style>
+      body {
+        background: #fff;
+        font-family: "sans-serif";
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        height: 100vh;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
       }
-    }
-    @media (max-width: 900px) {
-      .class-grid {
-        grid-template-columns: 1fr;
+      .login-wrap {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7f7f7;
       }
-    }
-    tr.status-before { background: #fff; }
-    tr.status-calling { background: #fffbe0; }
-    tr.status-paid { background: #e0f7fa; }
-    tr.status-cooked { background: #e6ffe6; }
-    .other-btn {
-      margin-top: 8px;
-      margin-bottom: 0;
-    }
-    #custom-confirm {
-      position: fixed;
-      z-index: 10000;
-      left: 0; top: 0; width: 100vw; height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      pointer-events: none;
-    }
-    .confirm-backdrop {
-      position: absolute;
-      left: 0; top: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.15);
-      z-index: 0;
-    }
-    .confirm-dialog {
-      position: relative;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.18);
-      padding: 32px 32px 24px 32px;
-      min-width: 320px;
-      text-align: center;
-      z-index: 1;
-      pointer-events: auto;
-    }
-    .confirm-title {
-      font-size: 1.5em;
-      font-weight: bold;
-      margin-bottom: 24px;
-    }
-    .confirm-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-    }
-    .other-btn {
-      background: #eee;
-      color: #333;
-      border: 1.5px solid #bbb;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: normal;
-      padding: 2px 10px;
-      margin-left: 8px;
-      cursor: pointer;
-      transition: background 0.2s, border 0.2s;
-      min-width: 0;
-      height: 28px;
-      line-height: 1.2;
-      box-sizing: border-box;
-      margin-top: 0;
-      margin-bottom: 0;
-    }
-    .other-btn:hover {
-      background: #ddd;
-      border-color: #888;
-    }
+      .login-box {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 12px #ccc;
+        padding: 32px 36px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .login-box h2 {
+        margin-bottom: 24px;
+        font-size: 1.6em;
+      }
+      .login-box select,
+      .login-box input {
+        font-size: 1.1em;
+        padding: 8px 12px;
+        margin-bottom: 16px;
+        border-radius: 4px;
+        border: 1px solid #bbb;
+        width: 200px;
+      }
+      .login-box button {
+        font-size: 1.1em;
+        padding: 8px 24px;
+        border-radius: 4px;
+        border: none;
+        background: #ffe066;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 8px;
+      }
+      .login-error {
+        color: #d03c69;
+        margin-bottom: 8px;
+        font-size: 1em;
+        min-height: 1.2em;
+      }
+      .class-grid {
+        flex: 1 1 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 32px 16px;
+        padding: 24px;
+        align-items: stretch;
+        height: 100%;
+        box-sizing: border-box;
+      }
+      .class-panel {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        min-width: 0;
+        max-width: 600px;
+        height: 100%;
+        position: relative;
+        padding: 12px 12px 0px 12px;
+        box-sizing: border-box;
+      }
+      .class-panel.bg-red {
+        background: #ffeaea;
+      }
+      .class-panel.bg-yellow {
+        background: #fffbe0;
+      }
+      .class-table-title {
+        text-align: center;
+        font-size: 2em;
+        font-weight: bold;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2px 10px;
+        height: 28px;
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+      table {
+        table-layout: fixed;
+        width: 100%;
+        border-collapse: collapse;
+      }
 
-    /* 調理完了ボタン */
-    .done-btn {
-      background: #ff6b6b;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      font-size: 1em;
-      font-weight: bold;
-      padding: 8px 28px;
-      transition: background 0.2s;
-      cursor: pointer;
-    }
-    .done-btn:hover {
-      background: #e55454 !important;
-    }
+      th,
+      td {
+        border: 2px solid #000000;
+        padding: 6px 8px;
+        text-align: center !important;
+        white-space: nowrap;
+      }
 
-    /* カスタムダイアログのはい・いいえ */
-    #confirm-yes {
-      background: #ff6b6b;
-      color: #fff;
-      border: none;
-      border-radius: 16px;
-      font-size: 1.1em;
-      padding: 8px 32px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    #confirm-yes:hover {
-      background: #e55454 !important;
-    }
-    #confirm-no {
-      background: #eee;
-      color: #333;
-      border: none;
-      border-radius: 16px;
-      font-size: 1.1em;
-      padding: 8px 24px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    #confirm-no:hover {
-      background: #ccc !important;
-    }
-    /* 操作モーダル */
-    #operation-modal {
-      position: fixed;
-      z-index: 9999;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-backdrop {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.3);
-    }
-    .modal-dialog {
-      position: relative;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      width: 90%;
-      max-width: 500px;
-      z-index: 10;
-    }
-    .modal-title {
-      font-size: 1.4em;
-      margin-bottom: 16px;
-    }
-    .modal-tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .tab-btn {
-      padding: 6px 12px;
-      background: #eee;
-      border: 1px solid #aaa;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .tab-btn.active {
-      background: #ccc;
-      font-weight: bold;
-    }
-    .modal-body {
-      margin-bottom: 16px;
-    }
-    .modal-footer {
-      text-align: right;
-    }
-    #modal-cancel,
-    #modal-confirm {
-      padding: 6px 14px;
-      margin-left: 8px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1em;
-      cursor: pointer;
-    }
-    #modal-cancel {
-      background: #ccc;
-    }
-    #modal-confirm {
-      background: #4caf50;
-      color: #fff;
-    }
-    #operation-modal .modal-dialog {
-      top: 50% !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%) !important;
-      position: fixed !important;
-    }
+      /* 幅設定 */
+      .col-id {
+        width: 8%;
+      }
+      .col-time {
+        width: 18%;
+      }
+      .col-item {
+        width: 22%;
+      } /* 商品1・2両方に */
+      .col-status {
+        width: 35%;
+      } /* ゆったりめ */
 
-    .class-table-wrap {
-      width: 100%;
-      box-sizing: border-box;
-      overflow: hidden; /* 外側ではスクロールさせない */
-    }
+      th {
+        background: #ffe066;
+        font-size: 16px;
+        font-weight: bold;
+        letter-spacing: 0.01em;
+      }
+      .status-cell {
+        font-size: 1em;
+        font-weight: normal;
+      }
+      .done-badge {
+        display: inline-block;
+        background: #ff6b6b;
+        color: #fff;
+        font-weight: bold;
+        border-radius: 20px;
+        padding: 6px 22px;
+        font-size: 1.2em;
+        margin-bottom: 12px;
+        margin-top: 8px;
+      }
+      .side-info {
+        width: 100%;
+        margin-left: 0;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        min-width: 0;
+        gap: 12px;
+        margin-bottom: 0;
+        margin-top: 0;
+      }
+      .side-info .summary-label {
+        font-size: 1em;
+        margin-bottom: 0;
+        margin-right: 4px;
+      }
+      .side-info .summary-item {
+        font-size: 1.1em;
+        font-weight: bold;
+        margin-bottom: 0;
+        letter-spacing: 0.05em;
+        margin-right: 4px;
+      }
+      .side-info .summary-num {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #222;
+        margin-left: 2px;
+      }
+      .side-info .done-badge {
+        margin-bottom: 0;
+        margin-top: 0;
+        margin-right: 8px;
+      }
+      .side-info .other-btn {
+        margin-top: 0;
+        margin-left: 8px;
+        padding: 6px 16px;
+        font-size: 0.95em;
+      }
 
-    .class-table-inner {
-      max-height: 500px;
-      overflow-y: auto;
-      overflow-x: hidden;
-    }
+      @media (max-width: 1400px) {
+        .class-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 900px) {
+        .class-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      tr.status-before {
+        background: #fff;
+      }
+      tr.status-calling {
+        background: #fffbe0;
+      }
+      tr.status-paid {
+        background: #e0f7fa;
+      }
+      tr.status-cooked {
+        background: #e6ffe6;
+      }
+      .other-btn {
+        margin-top: 8px;
+        margin-bottom: 0;
+      }
+      #custom-confirm {
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .confirm-backdrop {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.15);
+        z-index: 0;
+      }
+      .confirm-dialog {
+        position: relative;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
+        padding: 32px 32px 24px 32px;
+        min-width: 320px;
+        text-align: center;
+        z-index: 1;
+        pointer-events: auto;
+      }
+      .confirm-title {
+        font-size: 1.5em;
+        font-weight: bold;
+        margin-bottom: 24px;
+      }
+      .confirm-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+      }
+      .other-btn {
+        background: #eee;
+        color: #333;
+        border: 1.5px solid #bbb;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: normal;
+        padding: 2px 10px;
+        margin-left: 8px;
+        cursor: pointer;
+        transition: background 0.2s, border 0.2s;
+        min-width: 0;
+        height: 28px;
+        line-height: 1.2;
+        box-sizing: border-box;
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+      .other-btn:hover {
+        background: #ddd;
+        border-color: #888;
+      }
 
-    .class-table-inner table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
+      /* 調理完了ボタン */
+      .done-btn {
+        background: #ff6b6b;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 1em;
+        font-weight: bold;
+        padding: 8px 28px;
+        transition: background 0.2s;
+        cursor: pointer;
+      }
+      .done-btn:hover {
+        background: #e55454 !important;
+      }
 
-    .class-table-inner thead th {
-      position: sticky;
-      top: 0;
-      background: #ffe066;
-      z-index: 1;
-    }
+      /* カスタムダイアログのはい・いいえ */
+      #confirm-yes {
+        background: #ff6b6b;
+        color: #fff;
+        border: none;
+        border-radius: 16px;
+        font-size: 1.1em;
+        padding: 8px 32px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      #confirm-yes:hover {
+        background: #e55454 !important;
+      }
+      #confirm-no {
+        background: #eee;
+        color: #333;
+        border: none;
+        border-radius: 16px;
+        font-size: 1.1em;
+        padding: 8px 24px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      #confirm-no:hover {
+        background: #ccc !important;
+      }
+      /* 操作モーダル */
+      #operation-modal {
+        position: fixed;
+        z-index: 9999;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.3);
+      }
+      .modal-dialog {
+        position: relative;
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        width: 90%;
+        max-width: 500px;
+        z-index: 10;
+      }
+      .modal-title {
+        font-size: 1.4em;
+        margin-bottom: 16px;
+      }
+      .modal-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .tab-btn {
+        padding: 6px 12px;
+        background: #eee;
+        border: 1px solid #aaa;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .tab-btn.active {
+        background: #ccc;
+        font-weight: bold;
+      }
+      .modal-body {
+        margin-bottom: 16px;
+      }
+      .modal-footer {
+        text-align: right;
+      }
+      #modal-cancel,
+      #modal-confirm {
+        padding: 6px 14px;
+        margin-left: 8px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1em;
+        cursor: pointer;
+      }
+      #modal-cancel {
+        background: #ccc;
+      }
+      #modal-confirm {
+        background: #4caf50;
+        color: #fff;
+      }
+      #operation-modal .modal-dialog {
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        position: fixed !important;
+      }
 
-    /* テーブルは通常どおり表示 */
-    .class-table-wrap table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
+      .class-table-wrap {
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden; /* 外側ではスクロールさせない */
+      }
 
-    /* 固定行（ヘッダー） */
-    .class-table-wrap thead th {
-      position: sticky;
-      top: 0;
-      background: #ffe066;
-      z-index: 1;
-    }
+      .class-table-inner {
+        max-height: 500px;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
 
-    .panel-header {
-      margin-bottom: 8px;
-    }
+      .class-table-inner table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
 
+      .class-table-inner thead th {
+        position: sticky;
+        top: 0;
+        background: #ffe066;
+        z-index: 1;
+      }
 
-  </style>
-</head>
-<body> 
-  <div id="custom-confirm" style="display:none;">
-    <div class="confirm-backdrop"></div>
-    <div class="confirm-dialog">
-      <div class="confirm-title">調理完了しましたか？</div>
-      <div class="confirm-buttons">
-        <button id="confirm-no">いいえ</button>
-        <button id="confirm-yes">はい</button>
+      /* テーブルは通常どおり表示 */
+      .class-table-wrap table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      /* 固定行（ヘッダー） */
+      .class-table-wrap thead th {
+        position: sticky;
+        top: 0;
+        background: #ffe066;
+        z-index: 1;
+      }
+
+      .panel-header {
+        margin-bottom: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-wrap" id="login-wrap">
+      <form class="login-box" id="login-form" onsubmit="return false;">
+        <h2>LOGIN</h2>
+        <div class="login-error" id="login-error"></div>
+        <input
+          type="password"
+          id="class-pass"
+          placeholder="パスワード"
+          required
+        />
+        <button type="submit">ログイン</button>
+      </form>
+    </div>
+    <div id="main-wrap" style="display: none">
+      <div id="custom-confirm" style="display: none">
+        <div class="confirm-backdrop"></div>
+        <div class="confirm-dialog">
+          <div class="confirm-title">調理完了しましたか？</div>
+          <div class="confirm-buttons">
+            <button id="confirm-no">いいえ</button>
+            <button id="confirm-yes">はい</button>
+          </div>
+        </div>
+      </div>
+      <div class="class-grid" id="classGrid"></div>
+      <div id="operation-modal" style="display: none">
+        <div class="modal-backdrop"></div>
+        <div class="modal-dialog">
+          <h2 class="modal-title">他の操作</h2>
+          <div class="modal-tabs">
+            <button data-mode="add" class="tab-btn active">注文追加</button>
+            <button data-mode="edit" class="tab-btn">注文編集</button>
+            <button data-mode="delete" class="tab-btn">注文削除</button>
+            <button data-mode="reload" class="tab-btn">データ更新</button>
+          </div>
+          <div class="modal-body">
+            <!-- 各操作の中身はJSで切り替え -->
+          </div>
+          <div class="modal-footer">
+            <button id="modal-cancel">キャンセル</button>
+            <button id="modal-confirm">実行</button>
+          </div>
+        </div>
+      </div>
+      <div
+        id="update-message"
+        style="
+          position: fixed;
+          top: 16px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #333;
+          color: #fff;
+          padding: 10px 20px;
+          border-radius: 10px;
+          font-size: 1.1em;
+          font-weight: bold;
+          opacity: 0;
+          transition: opacity 0.5s;
+          z-index: 9999;
+          pointer-events: none;
+        "
+      >
+        更新しました
       </div>
     </div>
-  </div>
-  <div class="class-grid" id="classGrid"></div>
+  </body>
   <script>
+    const apiurl = "https://api.yaakiyu.f5.si/";
+    let auth_key = null;
+    let isLogin = false;
+    const id_to_index = {
+      0: 3,
+      1: 0,
+      2: 3,
+      3: 3,
+      4: 3,
+      5: 1,
+      6: 2,
+    };
+
+    // ログイン処理
+    document.getElementById("login-form").onsubmit = function () {
+      const pass = document.getElementById("class-pass").value;
+      const errorDiv = document.getElementById("login-error");
+
+      fetch(apiurl + "login", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          password: pass,
+        },
+      })
+        .then((response) => {
+          const data = response.json();
+          if (response.status === 200) {
+            return data;
+          } else if (response.status === 401) {
+            alert("パスワードが違います");
+            return null;
+          } else {
+            alert("ログイン中にエラーが発生しました。");
+            return null;
+          }
+        })
+        .then((data) => {
+          if (data == null) {
+            return;
+          }
+          console.log(data);
+          isLogin = true;
+          auth_key = data["token"];
+          // classnum = data["user"];
+          // ログイン成功
+          errorDiv.textContent = "";
+          document.getElementById("login-wrap").style.display = "none";
+          document.getElementById("main-wrap").style.display = "flex";
+
+          const checkInterval = () => {
+            check().then(async (ret) => {
+              console.log("checked", ret);
+              for (const key in ret) {
+                if (!allClassData[ret[key]["order_id"]]) {
+                  allClassData[ret[key]["order_id"]] = {
+                    ordered_at: ret[key]["timestamp"],
+                    order_items: ret[key]["order_items"],
+                    status: ret[key]["status"],
+                    history: [],
+                  };
+                }
+                allClassData[ret[key]["order_id"]]["status"] =
+                  ret[key]["status"];
+                allClassData[ret[key]["order_id"]]["history"].push(ret[key]);
+              }
+              if (ret.length > 0) {
+                // showClassTable(classnum);
+              }
+              updateAllClasses();
+
+              //Cはcheckを送る。
+              setTimeout(() => {
+                if (isLogin) {
+                  checkInterval();
+                }
+              }, 1000);
+            });
+          };
+          checkInterval();
+          console.log("checkInterval start");
+
+          fetch(apiurl + "log_all", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              authorization: auth_key,
+            },
+          })
+            .then((response) => {
+              if (response.status === 200) {
+                return response.json();
+              } else {
+                console.error("Error:", response.text());
+              }
+            })
+            .then((ret) => {
+              console.log("logall", ret);
+              allClassData.forEach((classData, idx) => {
+                // クラスごとのデータを初期化
+                allClassData[idx] = {};
+              });
+              if (ret == null) {
+                return;
+              }
+              for (const key in ret) {
+                if (id_to_index[ret[key]["user"]] == 3) {
+                  continue;
+                }
+                allClassData[id_to_index[ret[key]["user"]]][key] = {
+                  ordered_at: null, // これはXが悪いです　まことに申し訳なき
+                  order_items: ret[key]["order_items"],
+                  status: ret[key]["status"],
+                  history: ret[key]["history"],
+                };
+              }
+            });
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("ログイン中にエラーが発生しました。");
+        });
+
+      return false;
+    };
+
+    function check() {
+      return fetch(apiurl + "check", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: auth_key,
+        },
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            return response.json();
+          } else {
+            console.error("Error:", response.text());
+            return null;
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("ログイン中にエラーが発生しました。");
+          return null;
+        });
+    }
     // クラスごとの商品名
     const classLabels = [
       { name: "1組", items: ["プレーン", "抹茶"] },
       { name: "5組", items: ["コンソメ", "バター醤油"] },
-      { name: "6組", items: ["明太チーズ", "プレーン"] }
+      { name: "6組", items: ["明太チーズ", "プレーン"] },
     ];
 
     // 3クラス分のデータ（2組・3組・4組を削除）
     const allClassData = [
       // 1組: プレーン・抹茶
-      {
-        1: { ordered_at: Date.now() - 3600000, order_item: { "プレーン": 1, "抹茶": 3 }, status: "呼び出し前" },
-        2: { ordered_at: Date.now() - 3500000, order_item: { "プレーン": 3, "抹茶": 0 }, status: "呼び出し中" },
-        3: { ordered_at: Date.now() - 3400000, order_item: { "プレーン": 1, "抹茶": 0 }, status: "支払い済み" },
-        4: { ordered_at: Date.now() - 3300000, order_item: { "プレーン": 2, "抹茶": 4 }, status: "調理済み" },
-        5: { ordered_at: Date.now() - 3200000, order_item: { "プレーン": 1, "抹茶": 1 }, status: "呼び出し前" },
-        6: { ordered_at: Date.now() - 3100000, order_item: { "プレーン": 2, "抹茶": 2 }, status: "支払い済み" },
-        7: { ordered_at: Date.now() - 3000000, order_item: { "プレーン": 4, "抹茶": 0 }, status: "呼び出し前" },
-        8: { ordered_at: Date.now() - 2900000, order_item: { "プレーン": 0, "抹茶": 1 }, status: "支払い済み" },
-        9: { ordered_at: Date.now() - 2800000, order_item: { "プレーン": 2, "抹茶": 1 }, status: "呼び出し中" }
-      },
+      {},
       // 5組: コンソメ・バター醤油
-      {
-        1: { ordered_at: Date.now() - 3600000, order_item: { "コンソメ": 1, "バター醤油": 3 }, status: "呼び出し前" },
-        2: { ordered_at: Date.now() - 3500000, order_item: { "コンソメ": 3, "バター醤油": 0 }, status: "呼び出し中" },
-        3: { ordered_at: Date.now() - 3400000, order_item: { "コンソメ": 1, "バター醤油": 0 }, status: "支払い済み" },
-        4: { ordered_at: Date.now() - 3300000, order_item: { "コンソメ": 2, "バター醤油": 4 }, status: "調理済み" },
-        5: { ordered_at: Date.now() - 3200000, order_item: { "コンソメ": 1, "バター醤油": 1 }, status: "呼び出し前" },
-        6: { ordered_at: Date.now() - 3100000, order_item: { "コンソメ": 2, "バター醤油": 2 }, status: "支払い済み" },
-        7: { ordered_at: Date.now() - 3000000, order_item: { "コンソメ": 4, "バター醤油": 0 }, status: "呼び出し前" },
-        8: { ordered_at: Date.now() - 2900000, order_item: { "コンソメ": 0, "バター醤油": 1 }, status: "支払い済み" },
-        9: { ordered_at: Date.now() - 2800000, order_item: { "コンソメ": 2, "バター醤油": 1 }, status: "呼び出し中" }
-      },
+      {},
       // 6組: 明太チーズ・プレーン
-      {
-        1: { ordered_at: Date.now() - 3600000, order_item: { "明太チーズ": 1, "プレーン": 3 }, status: "呼び出し前" },
-        2: { ordered_at: Date.now() - 3500000, order_item: { "明太チーズ": 3, "プレーン": 0 }, status: "呼び出し中" },
-        3: { ordered_at: Date.now() - 3400000, order_item: { "明太チーズ": 1, "プレーン": 0 }, status: "支払い済み" },
-        4: { ordered_at: Date.now() - 3300000, order_item: { "明太チーズ": 2, "プレーン": 4 }, status: "調理済み" },
-        5: { ordered_at: Date.now() - 3200000, order_item: { "明太チーズ": 1, "プレーン": 1 }, status: "呼び出し前" },
-        6: { ordered_at: Date.now() - 3100000, order_item: { "明太チーズ": 2, "プレーン": 2 }, status: "支払い済み" },
-        7: { ordered_at: Date.now() - 3000000, order_item: { "明太チーズ": 4, "プレーン": 0 }, status: "呼び出し前" },
-        8: { ordered_at: Date.now() - 2900000, order_item: { "明太チーズ": 0, "プレーン": 1 }, status: "支払い済み" },
-        9: { ordered_at: Date.now() - 2800000, order_item: { "明太チーズ": 2, "プレーン": 1 }, status: "呼び出し中" }
-      }
+      {},
     ];
 
     const sortByIdFlags = [false, false, false]; // クラスごとのソート状態
-
-    // --- クラスパネルの最上部ヘッダー（クラス名・ソート・操作） --- //
-    const panelHeader = document.createElement("div");
-    panelHeader.className = "panel-header";
-    panelHeader.style.display = "flex";
-    panelHeader.style.justifyContent = "space-between";
-    panelHeader.style.alignItems = "center";
-    panelHeader.style.width = "100%";
-    panelHeader.style.marginBottom = "8px";
-
-    const classNameSpan = document.createElement("span");
-    classNameSpan.textContent = labels.name;
-    classNameSpan.style.fontWeight = "bold";
-    classNameSpan.style.fontSize = "1.4em";
-
-    const btnGroup = document.createElement("div");
-
-    const sortBtn = document.createElement("button");
-    sortBtn.textContent = sortByIdFlags[idx] ? "ステータス順" : "ID順";
-    sortBtn.className = "other-btn";
-    sortBtn.title = "ID順に並べ替え";
-    sortBtn.addEventListener("click", () => {
-      sortByIdFlags[idx] = !sortByIdFlags[idx];
-      renderPanels();
-    });
-
-    const otherBtn = document.createElement("button");
-    otherBtn.textContent = "他の操作";
-    otherBtn.className = "other-btn";
-    otherBtn.addEventListener("click", () => openOperationModal(idx));
-
-    btnGroup.appendChild(sortBtn);
-    btnGroup.appendChild(otherBtn);
-
-    panelHeader.appendChild(classNameSpan);
-    panelHeader.appendChild(btnGroup);
 
     // 1と2の同時押しで更新
     const pressedKeys = new Set();
@@ -490,44 +700,51 @@
       pressedKeys.delete(e.key);
     });
 
-
-
     // カスタムダイアログ関数
     function showCustomConfirm(message, onYes, anchorElem) {
-      const dialog = document.getElementById('custom-confirm');
-      dialog.querySelector('.confirm-title').innerHTML = message;
-      dialog.style.display = 'flex';
+      const dialog = document.getElementById("custom-confirm");
+      dialog.querySelector(".confirm-title").innerHTML = message;
+      dialog.style.display = "flex";
 
       if (anchorElem) {
         // anchorElem(パネル)の位置取得
         const rect = anchorElem.getBoundingClientRect();
-        const dialogBox = dialog.querySelector('.confirm-dialog');
-        dialog.style.position = 'fixed';
-        dialog.style.alignItems = 'flex-start';
-        dialog.style.justifyContent = 'flex-start';
-        dialog.style.left = '0';
-        dialog.style.top = '0';
+        const dialogBox = dialog.querySelector(".confirm-dialog");
+        dialog.style.position = "fixed";
+        dialog.style.alignItems = "flex-start";
+        dialog.style.justifyContent = "flex-start";
+        dialog.style.left = "0";
+        dialog.style.top = "0";
         // ダイアログをパネルの中央に配置
-        dialogBox.style.position = 'absolute';
-        dialogBox.style.left = `${rect.left + rect.width / 2 - dialogBox.offsetWidth / 2}px`;
-        dialogBox.style.top = `${rect.top + rect.height / 2 - dialogBox.offsetHeight / 2}px`;
+        dialogBox.style.position = "absolute";
+        dialogBox.style.left = `${
+          rect.left + rect.width / 2 - dialogBox.offsetWidth / 2
+        }px`;
+        dialogBox.style.top = `${
+          rect.top + rect.height / 2 - dialogBox.offsetHeight / 2
+        }px`;
       } else {
-        dialog.style.position = '';
-        dialog.style.alignItems = '';
-        dialog.style.justifyContent = '';
-        dialog.style.left = '';
-        dialog.style.top = '';
-        dialog.querySelector('.confirm-dialog').style.position = '';
-        dialog.querySelector('.confirm-dialog').style.left = '';
-        dialog.querySelector('.confirm-dialog').style.top = '';
+        dialog.style.position = "";
+        dialog.style.alignItems = "";
+        dialog.style.justifyContent = "";
+        dialog.style.left = "";
+        dialog.style.top = "";
+        dialog.querySelector(".confirm-dialog").style.position = "";
+        dialog.querySelector(".confirm-dialog").style.left = "";
+        dialog.querySelector(".confirm-dialog").style.top = "";
       }
 
       // ボタンイベント
-      const yesBtn = document.getElementById('confirm-yes');
-      const noBtn = document.getElementById('confirm-no');
-      const close = () => { dialog.style.display = 'none'; };
+      const yesBtn = document.getElementById("confirm-yes");
+      const noBtn = document.getElementById("confirm-no");
+      const close = () => {
+        dialog.style.display = "none";
+      };
       noBtn.onclick = close;
-      yesBtn.onclick = () => { close(); onYes(); };
+      yesBtn.onclick = () => {
+        close();
+        onYes();
+      };
     }
 
     // パネル生成
@@ -581,7 +798,10 @@
         // --- サイド情報（合計や完了バッジ） --- //
         const side = document.createElement("div");
         side.className = "side-info";
-        const isAllDone = Object.values(classData).every(order => order.status === "調理済み");
+        console.log("classData", classData);
+        const isAllDone = Object.values(classData).every(
+          (order) => order["status"] === "調理済み"
+        );
         if (isAllDone) {
           const badge = document.createElement("div");
           badge.className = "done-badge";
@@ -594,8 +814,9 @@
         label.textContent = "現在調理中：";
         side.appendChild(label);
 
-        let sumA = 0, sumB = 0;
-        Object.values(classData).forEach(order => {
+        let sumA = 0,
+          sumB = 0;
+        Object.values(classData).forEach((order) => {
           if (order.status === "支払い済み") {
             sumA += order.order_item[labels.items[0]];
             sumB += order.order_item[labels.items[1]];
@@ -640,28 +861,41 @@
               return Number(a[0]) - Number(b[0]); // ID順
             } else {
               const statusOrder = {
-                "支払い済み": 0,
-                "呼び出し中": 1,
-                "呼び出し前": 2,
-                "調理済み": 3
+                支払い済み: 0,
+                呼び出し中: 1,
+                呼び出し前: 2,
+                調理済み: 3,
               };
               return statusOrder[a[1].status] - statusOrder[b[1].status]; // ステータス順
             }
           })
           .forEach(([id, order]) => {
+            if (order["status"] == "在庫管理") {
+              return; // 在庫管理の注文は表示しない
+            }
             const row = document.createElement("tr");
-            row.className = {
-              "呼び出し前": "status-before",
-              "呼び出し中": "status-calling",
-              "支払い済み": "status-paid",
-              "調理済み": "status-cooked"
-            }[order.status] || "";
+            row.className =
+              {
+                呼び出し前: "status-before",
+                呼び出し中: "status-calling",
+                支払い済み: "status-paid",
+                調理済み: "status-cooked",
+              }[order.status] || "";
 
             row.innerHTML = `
               <td class="col-id">${id}</td>
-              <td class="col-time">${new Date(order.ordered_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</td>
-              <td class="col-item">${order.order_item[labels.items[0]]}</td>
-              <td class="col-item">${order.order_item[labels.items[1]]}</td>
+              <td class="col-time">${new Date(
+                order.ordered_at
+              ).toLocaleTimeString("ja-JP", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}</td>
+              <td class="col-item">${
+                order.order_items["item_1"] ? order.order_items["item_1"] : 0
+              }</td>
+              <td class="col-item">${
+                order.order_items["item_2"] ? order.order_items["item_2"] : 0
+              }</td>
               <td class="status-cell col-status">${order.status}</td>
             `;
             tbody.appendChild(row);
@@ -677,11 +911,11 @@
         doneBtn.className = "done-btn";
         doneBtn.onclick = () => {
           let items = [];
-          Object.values(classData).forEach(order => {
+          Object.values(classData).forEach((order) => {
             if (order.status === "支払い済み") {
               Object.entries(order.order_item).forEach(([name, count]) => {
                 if (count > 0) {
-                  const found = items.find(i => i.name === name);
+                  const found = items.find((i) => i.name === name);
                   if (found) found.count += count;
                   else items.push({ name, count });
                 }
@@ -690,17 +924,21 @@
           });
 
           let itemHtml = items.length
-            ? items.map(i => `${i.name} <b>${i.count}個</b>`).join('<br>')
+            ? items.map((i) => `${i.name} <b>${i.count}個</b>`).join("<br>")
             : '<span style="color:#888;">（該当なし）</span>';
           const msg = `<b>${labels.name}</b><br>${itemHtml}<br>調理完了しましたか？`;
-          showCustomConfirm(msg, () => {
-            Object.values(classData).forEach(order => {
-              if (order.status === "支払い済み") {
-                order.status = "調理済み";
-              }
-            });
-            renderPanels();
-          }, panel);
+          showCustomConfirm(
+            msg,
+            () => {
+              Object.values(classData).forEach((order) => {
+                if (order.status === "支払い済み") {
+                  order.status = "調理済み";
+                }
+              });
+              renderPanels();
+            },
+            panel
+          );
         };
 
         // --- パネルへの追加順序 --- //
@@ -725,9 +963,7 @@
       }
     }
 
-    
     function openOperationModal(classIndex) {
-      
       console.log("openOperationModal called with", classIndex);
 
       const modal = document.getElementById("operation-modal");
@@ -755,7 +991,9 @@
         `;
 
         if (currentMode === "add" || currentMode === "edit") {
-          body.innerHTML = sortBtnHTML + `
+          body.innerHTML =
+            sortBtnHTML +
+            `
             <label>ID: <input id="input-id" type="number" /></label><br>
             <label>${labels.items[0]}: <input id="input-item1" type="number" /></label><br>
             <label>${labels.items[1]}: <input id="input-item2" type="number" /></label><br>
@@ -769,11 +1007,14 @@
             </label><br>
           `;
         } else if (currentMode === "delete") {
-          body.innerHTML = sortBtnHTML + `
+          body.innerHTML =
+            sortBtnHTML +
+            `
             <label>削除するID: <input id="input-id" type="number" /></label><br>
           `;
         } else if (currentMode === "reload") {
-          body.innerHTML = sortBtnHTML + `<p>外部ソースから最新データを読み込みます。</p>`;
+          body.innerHTML =
+            sortBtnHTML + `<p>外部ソースから最新データを読み込みます。</p>`;
         }
 
         // 並べ替えボタンのイベント設定（毎回再設定）
@@ -789,11 +1030,10 @@
         }, 0);
       }
 
-
       // タブ切り替え処理
-      tabs.forEach(tab => {
+      tabs.forEach((tab) => {
         tab.onclick = () => {
-          tabs.forEach(t => t.classList.remove("active"));
+          tabs.forEach((t) => t.classList.remove("active"));
           tab.classList.add("active");
           currentMode = tab.getAttribute("data-mode");
           renderForm();
@@ -822,37 +1062,18 @@
             ordered_at: Date.now(),
             order_item: {
               [labels.items[0]]: item1,
-              [labels.items[1]]: item2
+              [labels.items[1]]: item2,
             },
-            status: status
+            status: status,
           };
-
         } else if (currentMode === "delete") {
           if (!id || !classData[id]) {
             alert("そのIDの注文は存在しません");
             return;
           }
           delete classData[id];
-
         } else if (currentMode === "reload") {
-          // 今回は仮の再読み込み（ダミーで2件加える）
-          const newID = Object.keys(classData).length + 1;
-          classData[newID] = {
-            ordered_at: Date.now(),
-            order_item: {
-              [labels.items[0]]: 1,
-              [labels.items[1]]: 2
-            },
-            status: "支払い済み"
-          };
-          classData[newID + 1] = {
-            ordered_at: Date.now(),
-            order_item: {
-              [labels.items[0]]: 2,
-              [labels.items[1]]: 1
-            },
-            status: "呼び出し前"
-          };
+          updateAllClasses();
         }
 
         modal.style.display = "none";
@@ -866,7 +1087,7 @@
 
       // 初期化して表示
       currentMode = "add";
-      tabs.forEach(t => t.classList.remove("active"));
+      tabs.forEach((t) => t.classList.remove("active"));
       modal.querySelector(`.tab-btn[data-mode="add"]`).classList.add("active");
       renderForm();
       modal.style.display = "flex";
@@ -892,53 +1113,8 @@
         msg.style.opacity = "0";
       }, 1800); // 約2秒でフェードアウト
     }
-
-
-
+    // document.addEventListener("DOMContentLoaded", () => {
+    //   renderPanels();
+    // });
   </script>
-  <!-- 操作用モーダル -->
-  <div id="operation-modal" style="display:none;">
-    <div class="modal-backdrop"></div>
-    <div class="modal-dialog">
-      <h2 class="modal-title">他の操作</h2>
-      <div class="modal-tabs">
-        <button data-mode="add" class="tab-btn active">注文追加</button>
-        <button data-mode="edit" class="tab-btn">注文編集</button>
-        <button data-mode="delete" class="tab-btn">注文削除</button>
-        <button data-mode="reload" class="tab-btn">データ更新</button>
-      </div>
-      <div class="modal-body">
-        <!-- 各操作の中身はJSで切り替え -->
-      </div>
-      <div class="modal-footer">
-        <button id="modal-cancel">キャンセル</button>
-        <button id="modal-confirm">実行</button>
-      </div>
-    </div>
-  </div>
-  <div id="update-message" style="
-    position: fixed;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-size: 1.1em;
-    font-weight: bold;
-    opacity: 0;
-    transition: opacity 0.5s;
-    z-index: 9999;
-    pointer-events: none;
-  ">
-    更新しました
-  </div>
-
-</body>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    renderPanels();
-  });
-</script>
 </html>
