@@ -573,20 +573,34 @@
             check().then(async (ret) => {
               console.log("checked", ret);
               for (const key in ret) {
-                if (!allClassData[ret[key]["order_id"]]) {
-                  allClassData[ret[key]["order_id"]] = {
-                    ordered_at: ret[key]["timestamp"],
+                if (id_to_index[ret[key]["user"]] == 3) {
+                  continue;
+                }
+                // 対象クラスデータが未定義なら初期化
+                if (!allClassData[id_to_index[ret[key]["user"]]]) {
+                  allClassData[id_to_index[ret[key]["user"]]] = {};
+                }
+                if (!allClassData[id_to_index[ret[key]["user"]]][key]) {
+                  console.log(`新規注文: ${key} for user ${ret[key]["user"]}`);
+                  allClassData[id_to_index[ret[key]["user"]]][key] = {
+                    ordered_at: null, // これはXが悪いです　まことに申し訳なき
                     order_items: ret[key]["order_items"],
                     status: ret[key]["status"],
-                    history: [],
+                    history: ret[key]["history"],
                   };
+                } else {
+                  // 既存の注文があれば更新
+                  allClassData[id_to_index[ret[key]["user"]]][key].order_items =
+                    ret[key]["order_items"];
+                  allClassData[id_to_index[ret[key]["user"]]][key].status =
+                    ret[key]["status"];
+                  allClassData[id_to_index[ret[key]["user"]]][key].history =
+                    ret[key]["history"];
                 }
-                allClassData[ret[key]["order_id"]]["status"] =
-                  ret[key]["status"];
-                allClassData[ret[key]["order_id"]]["history"].push(ret[key]);
               }
               if (ret.length > 0) {
                 updateAllClasses();
+                console.log("更新があったよ☆☆☆");
               }
 
               //Cはcheckを送る。
@@ -1013,7 +1027,8 @@
           `;
         } else if (currentMode === "reload") {
           body.innerHTML =
-            sortBtnHTML + `<p>外部ソースから最新データを読み込みます。</p>`;
+            sortBtnHTML +
+            `<p>これ押さなくても毎秒リロードしてるからあんまり意味ないよ</p>`;
         }
 
         // 並べ替えボタンのイベント設定（毎回再設定）
@@ -1045,26 +1060,46 @@
         const labels = classLabels[classIndex];
 
         const idInput = document.getElementById("input-id");
-        const id = idInput ? Number(idInput.value) : null;
+        const order_id = idInput ? Number(idInput.value) : null;
 
         if (currentMode === "add" || currentMode === "edit") {
           const item1 = Number(document.getElementById("input-item1").value);
           const item2 = Number(document.getElementById("input-item2").value);
-          const status = document.getElementById("input-status").value;
+          const new_status = document.getElementById("input-status").value;
 
-          if (!id || isNaN(item1) || isNaN(item2)) {
+          if (!order_id || isNaN(item1) || isNaN(item2)) {
             alert("すべての項目を正しく入力してください");
             return;
           }
-
-          classData[id] = {
-            ordered_at: Date.now(),
-            order_item: {
-              [labels.items[0]]: item1,
-              [labels.items[1]]: item2,
+          fetch(apiurl + "change_status", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              authorization: auth_key,
             },
-            status: status,
-          };
+            body: JSON.stringify({
+              status: new_status,
+              order_id: order_id,
+              order_items: {
+                item_1: item1,
+                item_2: item2,
+              },
+              user: classIndex,
+              message: null,
+            }),
+          })
+            .then(async (response) => {
+              if (response.status === 200) {
+                alert("ステータスを変更しました");
+              } else {
+                console.error("Error:", response.text());
+                alert("ステータス変更中にエラーが発生しました。");
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("ステータス変更中にエラーが発生しました。");
+            });
         } else if (currentMode === "delete") {
           if (!id || !classData[id]) {
             alert("そのIDの注文は存在しません");
