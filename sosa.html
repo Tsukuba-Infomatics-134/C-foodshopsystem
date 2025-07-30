@@ -827,18 +827,6 @@
         label.textContent = "現在調理中：";
         side.appendChild(label);
 
-        nowToCook(classData, 10, ToCook[idx]);
-
-        const itemA = document.createElement("div");
-        itemA.className = "summary-item";
-        itemA.innerHTML = `${labels.items[0]}<span class="summary-num">${ToCook[idx][0]}個</span>`;
-        side.appendChild(itemA);
-
-        const itemB = document.createElement("div");
-        itemB.className = "summary-item";
-        itemB.innerHTML = `${labels.items[1]}<span class="summary-num">${ToCook[idx][1]}個</span>`;
-        side.appendChild(itemB);
-
         // --- テーブル --- //
         const tableWrap = document.createElement("div");
         tableWrap.className = "class-table-wrap";
@@ -917,7 +905,7 @@
         doneBtn.className = "done-btn";
         doneBtn.onclick = () => {
           let items = [];
-          items = ToCook[idx]
+          items = ToCooks[idx]
             .map((count, i) => {
               if (count > 0) {
                 return {
@@ -931,21 +919,54 @@
 
           let itemHtml = items.length
             ? items.map((i) => `${i.name} <b>${i.count}個</b>`).join("<br>")
-            : '<span style="color:#888;">（該当なし）</span>';
+            : '<span style="color:#888;">（調理すべき個数を再計算します。）</span>';
           const msg = `<b>${labels.name}</b><br>${itemHtml}<br>調理完了しましたか？`;
           showCustomConfirm(
             msg,
             () => {
-              Object.values(classData).forEach((order) => {
-                if (order.status === "支払い済み") {
-                  order.status = "調理済み";
+              //ToCookIDに含まれるIDについて、ステータスを調理済みに更新
+              let body = [];
+              ToCookID.forEach((id) => {
+                body.push({
+                  order_id: id,
+                  status: "調理済み",
+                });
+              });
+
+              fetch(apiurl + "change_status_multi", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  authorization: auth_key,
+                },
+                body: JSON.stringify({
+                  body: body,
+                  from_: 0,
+                }),
+              }).then((response) => {
+                if (response.status === 200) {
+                  return;
+                } else {
+                  console.error("Error:", response.text());
                 }
               });
+              //次の調理すべき個数を計算
+              nowToCook(classData, 10, ToCooks[idx], ToCookIDs[idx]);
               renderPanels();
             },
             panel
           );
         };
+
+        const itemA = document.createElement("div");
+        itemA.className = "summary-item";
+        itemA.innerHTML = `${labels.items[0]}<span class="summary-num">${ToCooks[idx][0]}個</span>`;
+        side.appendChild(itemA);
+
+        const itemB = document.createElement("div");
+        itemB.className = "summary-item";
+        itemB.innerHTML = `${labels.items[1]}<span class="summary-num">${ToCooks[idx][1]}個</span>`;
+        side.appendChild(itemB);
 
         // --- パネルへの追加順序 --- //
         panel.appendChild(panelHeader);
@@ -954,6 +975,69 @@
         panel.appendChild(tableWrap);
         grid.appendChild(panel);
       });
+    }
+
+    var ToCooks = [
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ];
+    var ToCookIDs = [[], [], []];
+    //ToCook_は参照渡し(var)
+    function nowToCook(data, limit, ToCook_, ToCookID) {
+      const orders = data;
+      ToCook_[0] = 0;
+      ToCook_[1] = 0;
+      ToCookID.length = 0; // 配列を空にする
+      Object.entries(orders).forEach(([id, order]) => {
+        if (order.status === "調理待ち") {
+          if (
+            ToCook_[0] +
+              ToCook_[1] +
+              (order["order_items"]["item_1"] ?? 0) +
+              (order["order_items"]["item_2"] ?? 0) >
+            limit
+          ) {
+            return;
+          }
+          ToCook_[0] += order["order_items"]["item_1"] ?? 0;
+          ToCook_[1] += order["order_items"]["item_2"] ?? 0;
+          ToCookID.push(id);
+          console.log(
+            `ToCookIDに追加: ${id}, item_1: ${
+              order["order_items"]["item_1"] ?? 0
+            }, item_2: ${order["order_items"]["item_2"] ?? 0}`
+          );
+        }
+      });
+      //ToCookIDに含まれるIDについて、ステータスを調理中に更新
+      let body = [];
+      ToCookID.forEach((id) => {
+        body.push({
+          order_id: id,
+          status: "調理中",
+        });
+      });
+
+      fetch(apiurl + "change_status_multi", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: auth_key,
+        },
+        body: JSON.stringify({
+          body: body,
+          from_: 0,
+        }),
+      }).then((response) => {
+        if (response.status === 200) {
+          return;
+        } else {
+          console.error("Error:", response.text());
+        }
+      });
+
+      return ToCookID;
     }
 
     function syncTableColumnWidths(table) {
@@ -1143,41 +1227,5 @@
     // document.addEventListener("DOMContentLoaded", () => {
     //   renderPanels();
     // });
-    var ToCook = [
-      [0, 0],
-      [0, 0],
-      [0, 0],
-    ];
-    //ToCookは参照渡し
-    function nowToCook(data, limit, ToCook_) {
-      const orders = data;
-      ToCook_[0] = 0;
-      ToCook_[1] = 0;
-      ToCookID = [];
-      Object.entries(orders).forEach(([id, order]) => {
-        if (order.status === "調理待ち") {
-          if (
-            ToCook_[0] +
-              ToCook_[1] +
-              (order["order_items"]["item_1"] ?? 0) +
-              (order["order_items"]["item_2"] ?? 0) >
-            limit
-          ) {
-            return;
-          }
-          ToCook_[0] += order["order_items"]["item_1"] ?? 0;
-          ToCook_[1] += order["order_items"]["item_2"] ?? 0;
-          ToCookID.push(id);
-          console.log(
-            `ToCookIDに追加: ${id}, item_1: ${
-              order["order_items"]["item_1"] ?? 0
-            }, item_2: ${order["order_items"]["item_2"] ?? 0}`
-          );
-        }
-      });
-      console.log("ToCook", ToCook_);
-      console.log("ToCookID(nowToCookの返り値)", ToCookID);
-      return ToCookID;
-    }
   </script>
 </html>
