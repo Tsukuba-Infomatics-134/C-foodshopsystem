@@ -213,10 +213,6 @@
       tr.status-cooked {
         background: #e6ffe6;
       }
-      .other-btn {
-        margin-top: 8px;
-        margin-bottom: 0;
-      }
       #custom-confirm {
         position: fixed;
         z-index: 10000;
@@ -274,7 +270,7 @@
         height: 28px;
         line-height: 1.2;
         box-sizing: border-box;
-        margin-top: 0;
+        margin-top: 0;  /* 8px */
         margin-bottom: 0;
       }
       .other-btn:hover {
@@ -401,8 +397,6 @@
       #operation-modal .modal-dialog {
         top: 50% !important;
         left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        position: fixed !important;
       }
 
       .class-table-wrap {
@@ -417,28 +411,8 @@
         overflow-x: hidden;
       }
 
-      .class-table-inner table {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-      }
-
-      .class-table-inner thead th {
-        position: sticky;
-        top: 0;
-        background: #ffe066;
-        z-index: 1;
-      }
-
-      /* テーブルは通常どおり表示 */
-      .class-table-wrap table {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-      }
-
       /* 固定行（ヘッダー） */
-      .class-table-wrap thead th {
+      .class-table-wrap thead th, .class-table-inner thead th {
         position: sticky;
         top: 0;
         background: #ffe066;
@@ -544,26 +518,20 @@
           password: pass,
         },
       })
-        .then((response) => {
-          const data = response.json();
-          if (response.status === 200) {
-            return data;
-          } else if (response.status === 401) {
-            alert("パスワードが違います");
+        .then(async (response) => {
+          const data = await response.json();
+
+          if (response.status === 401) {
+            errorDiv.textContent = "パスワードが違います。";
+            document.getElementById("class-pass").value = "";
             return null;
-          } else {
+          } else if (response.status !== 200) {
             alert("ログイン中にエラーが発生しました。");
+            console.error(data);
             return null;
           }
-        })
-        .then((data) => {
-          if (data == null) {
-            return;
-          }
-          console.log(data);
           isLogin = true;
           auth_key = data["token"];
-          // classnum = data["user"];
           // ログイン成功
           errorDiv.textContent = "";
           document.getElementById("login-wrap").style.display = "none";
@@ -583,7 +551,7 @@
                 if (!allClassData[id_to_index[ret[key]["user"]]][key]) {
                   console.log(`新規注文: ${key} for user ${ret[key]["user"]}`);
                   allClassData[id_to_index[ret[key]["user"]]][key] = {
-                    ordered_at: null, // これはXが悪いです　まことに申し訳なき
+                    ordered_at: ret[key]["history"][0]["timestamp"],
                     order_items: ret[key]["order_items"],
                     status: ret[key]["status"],
                     history: ret[key]["history"],
@@ -667,9 +635,9 @@
           authorization: auth_key,
         },
       })
-        .then((response) => {
+        .then(async (response) => {
           if (response.status === 200) {
-            return response.json();
+            return await response.json();
           } else {
             console.error("Error:", response.text());
             return null;
@@ -677,7 +645,7 @@
         })
         .catch((error) => {
           console.error("Error:", error);
-          alert("ログイン中にエラーが発生しました。");
+          alert("APIエラーが発生しました。");
           return null;
         });
     }
@@ -1037,21 +1005,6 @@
           console.error("Error:", response.text());
         }
       });
-
-      return ToCookID;
-    }
-
-    function syncTableColumnWidths(table) {
-      const ths = table.querySelectorAll("thead th");
-      const tds = table.querySelectorAll("tbody tr:first-child td");
-
-      if (ths.length !== tds.length) return;
-
-      for (let i = 0; i < ths.length; i++) {
-        const width = Math.floor(ths[i].getBoundingClientRect().width);
-        ths[i].style.width = `${width}px`;
-        tds[i].style.width = `${width}px`;
-      }
     }
 
     function openOperationModal(classIndex) {
@@ -1068,7 +1021,6 @@
       const cancelBtn = document.getElementById("modal-cancel");
 
       let currentMode = "add"; // 初期状態：追加モード
-      let currentID = "";
 
       function renderForm() {
         const labels = classLabels[classIndex];
@@ -1179,11 +1131,11 @@
               alert("ステータス変更中にエラーが発生しました。");
             });
         } else if (currentMode === "delete") {
-          if (!id || !classData[id]) {
+          if (!order_id || !classData[order_id]) {
             alert("そのIDの注文は存在しません");
             return;
           }
-          delete classData[id];
+          delete classData[order_id];
         } else if (currentMode === "reload") {
           updateAllClasses();
         }
@@ -1225,8 +1177,5 @@
         msg.style.opacity = "0";
       }, 1800); // 約2秒でフェードアウト
     }
-    // document.addEventListener("DOMContentLoaded", () => {
-    //   renderPanels();
-    // });
   </script>
 </html>
