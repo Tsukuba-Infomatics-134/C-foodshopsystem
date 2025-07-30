@@ -269,6 +269,15 @@
         { name: "5組", items: ["コンソメ", "バター醤油"] },
         { name: "6組", items: ["明太チーズ", "プレーン"] },
       ];
+      const max_per_cook = [
+        0, // dummy
+        10, // 1組
+        5, // 2組
+        10, // 3組
+        10, // 4組
+        10, // 5組
+        10, // 6組
+      ];
 
       const apiurl = "https://api.yaakiyu.f5.si/";
       let auth_key = null;
@@ -413,10 +422,16 @@
         const oldTable = container.querySelector("table");
         if (oldTable) oldTable.remove();
 
-        container.appendChild(createOrderTable(ClassData, labels.items));
+        container.appendChild(
+          createOrderTable(
+            ClassData,
+            labels.items,
+            nowToCook(ClassData, max_per_cook[classIdx], ToCook)
+          )
+        );
 
         // 総数
-        const summary = getPaidTotals(ClassData, labels.items);
+        const summary = ToCook;
         document.getElementById(
           "summary-container"
         ).innerHTML = `<div class="summary-item">${labels.items[0]}<br><span class="summary-num">${summary[0]}個</span></div>
@@ -424,7 +439,8 @@
       }
 
       // テーブル生成
-      function createOrderTable(orders, items) {
+      function createOrderTable(orders, items, ToCookID) {
+        console.log("createOrderTable", ToCookID);
         const table = document.createElement("table");
         const headers = ["番号", "注文時間", items[0], items[1]];
         const thead = table.createTHead();
@@ -437,22 +453,22 @@
 
         const tbody = table.createTBody();
 
-        // 支払い済みの行が上に来るようにソート
+        // 調理待ちの行が上に来るようにソート
         const sortedOrderNos = Object.keys(orders).sort((a, b) => {
-          const aPaid = orders[a].status === "支払い済み" ? 0 : 1;
-          const bPaid = orders[b].status === "支払い済み" ? 0 : 1;
+          const aPaid = orders[a].status === "調理待ち" ? 0 : 1;
+          const bPaid = orders[b].status === "調理待ち" ? 0 : 1;
           if (aPaid !== bPaid) return aPaid - bPaid;
           return a - b;
         });
 
-        // 支払い済みの最後のindexを探す
+        // 調理待ちの最後のindexを探す
         let lastPaidIdx = -1;
         sortedOrderNos.forEach((orderNo, idx) => {
-          if (orders[orderNo].status === "支払い済み") lastPaidIdx = idx;
+          if (orders[orderNo].status === "調理待ち") lastPaidIdx = idx;
         });
 
         sortedOrderNos.forEach((orderNo, idx) => {
-          // 支払い済み→それ以外の境目に線を挿入
+          // 調理待ち→それ以外の境目に線を挿入
           if (idx === lastPaidIdx + 1) {
             const sepRow = tbody.insertRow();
             const sepCell = sepRow.insertCell();
@@ -467,8 +483,8 @@
           console.log(order);
           const row = tbody.insertRow();
 
-          // 支払い済み以外の行にクラスを付与
-          if (order.status !== "支払い済み") {
+          // 調理待ち以外の行にクラスを付与
+          if (order.status !== "調理待ち") {
             row.classList.add("not-paid-row");
           }
 
@@ -487,38 +503,61 @@
           const cellA = row.insertCell();
           cellA.textContent = order["order_items"]["item_1"] ?? 0;
           if (
-            order.status === "支払い済み" &&
+            order.status === "調理待ち" &&
             order["order_items"]["item_1"] > 0
           ) {
-            cellA.classList.add("highlight");
+            if (ToCookID.includes(orderNo)) {
+              cellA.classList.add("highlight");
+            }
           }
 
           // 商品2
           const cellB = row.insertCell();
           cellB.textContent = order["order_items"]["item_2"] ?? 0;
           if (
-            order.status === "支払い済み" &&
+            order.status === "調理待ち" &&
             order["order_items"]["item_2"] > 0
           ) {
-            cellB.classList.add("highlight");
+            if (ToCookID.includes(orderNo)) {
+              cellB.classList.add("highlight");
+            }
           }
         });
 
         return table;
       }
 
-      // 支払い済みの各商品の総数を計算
+      // 調理待ちの各商品の総数を計算
       function getPaidTotals(data, items) {
         const orders = data;
         let sumA = 0;
         let sumB = 0;
         Object.values(orders).forEach((order) => {
-          if (order.status === "支払い済み") {
+          if (order.status === "調理待ち") {
             sumA += order["order_items"]["item_1"] ?? 0;
             sumB += order["order_items"]["item_2"] ?? 0;
           }
         });
         return [sumA, sumB];
+      }
+
+      var ToCook = [0, 0];
+      //ToCookは参照渡し
+      function nowToCook(data, limit, ToCook_) {
+        const orders = data;
+        ToCook_[0] = 0;
+        ToCook_[1] = 0;
+        ToCookID = [];
+        Object.entries(orders).forEach(([id, order]) => {
+          if (order.status === "調理中") {
+            ToCook_[0] += order["order_items"]["item_1"] ?? 0;
+            ToCook_[1] += order["order_items"]["item_2"] ?? 0;
+            ToCookID.push(id);
+          }
+        });
+        console.log("ToCook", ToCook_);
+        console.log("ToCookID(nowToCookの返り値)", ToCookID);
+        return ToCookID;
       }
       let escKeyDownTime = null;
 

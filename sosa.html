@@ -827,23 +827,16 @@
         label.textContent = "現在調理中：";
         side.appendChild(label);
 
-        let sumA = 0,
-          sumB = 0;
-        Object.values(classData).forEach((order) => {
-          if (order.status === "支払い済み") {
-            sumA += order.order_item[labels.items[0]];
-            sumB += order.order_item[labels.items[1]];
-          }
-        });
+        nowToCook(classData, 10, ToCook[idx]);
 
         const itemA = document.createElement("div");
         itemA.className = "summary-item";
-        itemA.innerHTML = `${labels.items[0]}<span class="summary-num">${sumA}個</span>`;
+        itemA.innerHTML = `${labels.items[0]}<span class="summary-num">${ToCook[idx][0]}個</span>`;
         side.appendChild(itemA);
 
         const itemB = document.createElement("div");
         itemB.className = "summary-item";
-        itemB.innerHTML = `${labels.items[1]}<span class="summary-num">${sumB}個</span>`;
+        itemB.innerHTML = `${labels.items[1]}<span class="summary-num">${ToCook[idx][1]}個</span>`;
         side.appendChild(itemB);
 
         // --- テーブル --- //
@@ -874,9 +867,9 @@
               return Number(a[0]) - Number(b[0]); // ID順
             } else {
               const statusOrder = {
-                支払い済み: 0,
+                調理待ち: 0,
                 呼び出し中: 1,
-                呼び出し前: 2,
+                呼び出し待ち: 2,
                 調理済み: 3,
               };
               return statusOrder[a[1].status] - statusOrder[b[1].status]; // ステータス順
@@ -924,17 +917,17 @@
         doneBtn.className = "done-btn";
         doneBtn.onclick = () => {
           let items = [];
-          Object.values(classData).forEach((order) => {
-            if (order.status === "支払い済み") {
-              Object.entries(order.order_item).forEach(([name, count]) => {
-                if (count > 0) {
-                  const found = items.find((i) => i.name === name);
-                  if (found) found.count += count;
-                  else items.push({ name, count });
-                }
-              });
-            }
-          });
+          items = ToCook[idx]
+            .map((count, i) => {
+              if (count > 0) {
+                return {
+                  name: labels.items[i],
+                  count: count,
+                };
+              }
+              return null;
+            })
+            .filter((i) => i !== null);
 
           let itemHtml = items.length
             ? items.map((i) => `${i.name} <b>${i.count}個</b>`).join("<br>")
@@ -1150,5 +1143,41 @@
     // document.addEventListener("DOMContentLoaded", () => {
     //   renderPanels();
     // });
+    var ToCook = [
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ];
+    //ToCookは参照渡し
+    function nowToCook(data, limit, ToCook_) {
+      const orders = data;
+      ToCook_[0] = 0;
+      ToCook_[1] = 0;
+      ToCookID = [];
+      Object.entries(orders).forEach(([id, order]) => {
+        if (order.status === "調理待ち") {
+          if (
+            ToCook_[0] +
+              ToCook_[1] +
+              (order["order_items"]["item_1"] ?? 0) +
+              (order["order_items"]["item_2"] ?? 0) >
+            limit
+          ) {
+            return;
+          }
+          ToCook_[0] += order["order_items"]["item_1"] ?? 0;
+          ToCook_[1] += order["order_items"]["item_2"] ?? 0;
+          ToCookID.push(id);
+          console.log(
+            `ToCookIDに追加: ${id}, item_1: ${
+              order["order_items"]["item_1"] ?? 0
+            }, item_2: ${order["order_items"]["item_2"] ?? 0}`
+          );
+        }
+      });
+      console.log("ToCook", ToCook_);
+      console.log("ToCookID(nowToCookの返り値)", ToCookID);
+      return ToCookID;
+    }
   </script>
 </html>
