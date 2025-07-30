@@ -257,7 +257,7 @@
 
     <script>
       // --- データ ---
-      const allClassData = {};
+      const ClassData = {};
 
       // クラスごとの商品名
       const classLabels = [
@@ -338,17 +338,17 @@
               check().then(async (ret) => {
                 console.log("checked", ret);
                 for (const key in ret) {
-                  if (!allClassData[ret[key]["order_id"]]) {
-                    allClassData[ret[key]["order_id"]] = {
+                  if (!ClassData[ret[key]["order_id"]]) {
+                    ClassData[ret[key]["order_id"]] = {
                       ordered_at: ret[key]["timestamp"],
                       order_items: ret[key]["order_items"],
                       status: ret[key]["status"],
                       history: [],
                     };
                   }
-                  allClassData[ret[key]["order_id"]]["status"] =
+                  ClassData[ret[key]["order_id"]]["status"] =
                     ret[key]["status"];
-                  allClassData[ret[key]["order_id"]]["history"].push(ret[key]);
+                  ClassData[ret[key]["order_id"]]["history"].push(ret[key]);
                 }
                 if (ret.length > 0) {
                   showClassTable(classnum);
@@ -384,7 +384,7 @@
                   return;
                 }
                 for (const key in ret) {
-                  allClassData[key] = {
+                  ClassData[key] = {
                     ordered_at: null, // これはXが悪いです　まことに申し訳なき
                     order_items: ret[key]["order_items"],
                     status: ret[key]["status"],
@@ -413,10 +413,10 @@
         const oldTable = container.querySelector("table");
         if (oldTable) oldTable.remove();
 
-        container.appendChild(createOrderTable(allClassData, labels.items));
+        container.appendChild(createOrderTable(ClassData, labels.items));
 
         // 総数
-        const summary = getPaidTotals(allClassData, labels.items);
+        const summary = getPaidTotals(ClassData, labels.items);
         document.getElementById(
           "summary-container"
         ).innerHTML = `<div class="summary-item">${labels.items[0]}<br><span class="summary-num">${summary[0]}個</span></div>
