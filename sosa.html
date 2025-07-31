@@ -547,7 +547,11 @@
               console.log("checked", ret);
               let updated = 0;
               for (const key in ret) {
-                const order_id = String(ret[key]["order_id"]);
+                const order_id = ret[key]["order_id"];
+                if (order_id < 7) {
+                  // 在庫管理用IDなので無視
+                  continue;
+                }
                 const class_idx = id_to_index[ret[key]["user"]];
                 if (class_idx == 3) {
                   continue;
@@ -604,9 +608,10 @@
                 return;
               }
               for (const key in ret) {
+                console.log(key, ret[key]);
                 if (id_to_index[ret[key]["user"]] == 3) continue;
-                if (ret[key]["type"] == "x") continue;
-                allClassData[id_to_index[ret[key]["user"]]][key] = {
+                if (ret[key]["id"] < 7) continue;  // 在庫管理用IDなので無視
+                allClassData[id_to_index[ret[key]["user"]]][ret[key]["id"]] = {
                   ordered_at: Number(ret[key]["history"][0]["timestamp"]) * 1000,
                   order_items: ret[key]["order_items"],
                   status: ret[key]["status"],
@@ -836,7 +841,7 @@
             }
           })
           .forEach(([id, order]) => {
-            if (order["status"] == "在庫管理") {
+            if (order["order_id"] < 7) {
               return; // 在庫管理の注文は表示しない
             }
             const row = document.createElement("tr");
@@ -919,8 +924,8 @@
                 }).then((response) => {
                   if (response.status === 200) {
                     ToCookIDs[idx].forEach((id) => {
-                      allClassData[idx][String(id)].status = "調理済み";
-                      allClassData[idx][String(id)].history.push({
+                      allClassData[idx][id].status = "調理済み";
+                      allClassData[idx][id].history.push({
                         status: "調理済み",
                         message: null,
                         timestamp: Date.now() / 1000,
@@ -1015,8 +1020,8 @@
         }).then((response) => {
           if (response.status === 200) {
             ToCookIDs[class_idx].forEach((id) => {
-              allClassData[class_idx][String(id)].status = "調理中";
-              allClassData[class_idx][String(id)].history.push({
+              allClassData[class_idx][id].status = "調理中";
+              allClassData[class_idx][id].history.push({
                 status: "調理中",
                 message: null,
                 timestamp: Date.now() / 1000,
@@ -1047,7 +1052,6 @@
 
       function renderForm() {
         const labels = classLabels[classIndex];
-        const classData = allClassData[classIndex];
 
         let sortBtnHTML = `
           <button id="sort-toggle-btn" class="other-btn" style="margin-top: 10px;">
@@ -1110,7 +1114,6 @@
       // 実行ボタン処理
       confirmBtn.onclick = () => {
         const classData = allClassData[classIndex];
-        const labels = classLabels[classIndex];
 
         const idInput = document.getElementById("input-id");
         const order_id = idInput ? Number(idInput.value) : null;
