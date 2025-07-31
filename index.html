@@ -233,7 +233,7 @@
   <body>
     <!-- ログイン画面 -->
     <div class="login-wrap" id="login-wrap">
-      <form class="login-box" id="login-form" onsubmit="return false;">
+      <form class="login-box" id="login-form" onsubmit="loginFormSubmitted(); return false;">
         <h2>PLEAAAAAAAAAAAAAAAAASE LOGIN</h2>
         <div class="login-error" id="login-error"></div>
         <input
@@ -262,7 +262,7 @@
       // クラスごとの商品名
       const classLabels = [
         { name: "dummy", items: ["だみ", "だみだみ"] },
-        { name: "1組", items: ["item_1", "item_2"] },
+        { name: "1組", items: ["プレーン", "抹茶"] },
         { name: "2組", items: ["プレーン", "チーズ"] },
         { name: "3組", items: ["プレーン", "みたらし"] },
         { name: "4組", items: ["プレーン", "マンゴー"] },
@@ -272,7 +272,7 @@
       const max_per_cook = [
         0, // dummy
         10, // 1組
-        5, // 2組
+        10, // 2組
         10, // 3組
         10, // 4組
         10, // 5組
@@ -281,7 +281,9 @@
 
       const apiurl = "https://api.yaakiyu.f5.si/";
       let auth_key = null;
+      let classnum = 0;
       let isLogin = false;
+      var ToCook = [0, 0]; // 調理待ちの各商品の総数
 
       function check() {
         return fetch(apiurl + "check", {
@@ -290,131 +292,108 @@
             "Content-Type": "application/json",
             authorization: auth_key,
           },
-        })
-          .then((response) => {
-            if (response.status === 200) {
-              return response.json();
-            } else {
-              console.error("Error:", response.text());
-              return null;
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("ログイン中にエラーが発生しました。");
+        }).then(async (response) => {
+          if (response.status === 200) {
+            return await response.json();
+          } else {
+            console.error("Error:", await response.text());
             return null;
-          });
+          }
+        });
       }
 
       // ログイン処理
-      document.getElementById("login-form").onsubmit = function () {
+      async function loginFormSubmitted() {
         const pass = document.getElementById("class-pass").value;
         const errorDiv = document.getElementById("login-error");
 
-        fetch(apiurl + "login", {
+        const data = await fetch(apiurl + "login", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
             password: pass,
           },
-        })
-          .then((response) => {
-            const data = response.json();
-            if (response.status === 200) {
-              return data;
-            } else if (response.status === 401) {
-              alert("パスワードが違います");
-              return null;
-            } else {
-              alert("ログイン中にエラーが発生しました。");
-              return null;
-            }
-          })
-          .then((data) => {
-            if (data == null) {
-              return;
-            }
-            console.log(data);
-            isLogin = true;
-            auth_key = data["token"];
-            classnum = data["user"];
-            // ログイン成功
-            errorDiv.textContent = "";
-            document.getElementById("login-wrap").style.display = "none";
-            document.getElementById("main-wrap").style.display = "flex";
-
-            const checkInterval = () => {
-              check().then(async (ret) => {
-                console.log("checked", ret);
-                for (const key in ret) {
-                  if (!ClassData[ret[key]["order_id"]]) {
-                    ClassData[ret[key]["order_id"]] = {
-                      ordered_at: ret[key]["timestamp"],
-                      order_items: ret[key]["order_items"],
-                      status: ret[key]["status"],
-                      history: [],
-                    };
-                  }
-                  ClassData[ret[key]["order_id"]]["status"] =
-                    ret[key]["status"];
-                  ClassData[ret[key]["order_id"]]["history"].push(ret[key]);
-                }
-                if (ret.length > 0) {
-                  showClassTable(classnum);
-                }
-                //Cはcheckを送る。
-                setTimeout(() => {
-                  if (isLogin) {
-                    checkInterval();
-                  }
-                }, 1000);
-              });
-            };
-
-            fetch(apiurl + "log_all", {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                authorization: auth_key,
-              },
-            })
-              .then((response) => {
-                if (response.status === 200) {
-                  return response.json();
-                } else {
-                  console.error("Error:", response.text());
-                }
-              })
-              .then((ret) => {
-                console.log("logall", ret);
-                if (ret == null) {
-                  return;
-                }
-                for (const key in ret) {
-                  if (ret[key]["id"] < 7) continue; // 在庫管理用IDなので無視
-                  ClassData[key] = {
-                    ordered_at: null, // これはXが悪いです　まことに申し訳なき
-                    order_items: ret[key]["order_items"],
-                    status: ret[key]["status"],
-                    history: ret[key]["history"],
-                    ordered_at:
-                      Number(ret[key]["history"][0]["timestamp"]) * 1000,
-                  };
-                }
-                showClassTable(classnum);
-              });
-
-            checkInterval();
-            console.log("checkInterval start");
-          })
-          .catch((error) => {
-            console.error("Error:", error);
+        }).then(async (response) => {
+          if (response.status === 401) {
+            alert("パスワードが違います");
+            return null;
+          } else if (response.status !== 200) {
             alert("ログイン中にエラーが発生しました。");
+            console.error("Error:", await response.text());
+            return null;
+          }
+          return await response.json();
+        });
+
+        if (!data) {return false;}
+        console.log(data);
+        isLogin = true;
+        auth_key = data["token"];
+        classnum = data["user"];
+        // ログイン成功
+        errorDiv.textContent = "";
+        document.getElementById("login-wrap").style.display = "none";
+        document.getElementById("main-wrap").style.display = "flex";
+
+        const checkInterval = () => {
+          check().then((ret) => {
+            let update_count = 0;
+            for (const key in ret) {
+              const order_id = ret[key]["order_id"];
+              if (ret[key]["id"] < 7) continue; // 在庫管理用IDなので無視
+              if (!ClassData[order_id]) {
+                console.log(`新規注文 No.${order_id}`);
+                ClassData[order_id] = {
+                  ordered_at: Number(ret[key]["timestamp"]) * 1000,
+                  order_items: ret[key]["order_items"],
+                  status: ret[key]["status"],
+                  history: [ret[key]],
+                };
+              }
+              else {
+                console.log(`更新注文 No.${order_id}: ${ClassData[order_id]["status"]} -> ${ret[key]["status"]}`);
+                ClassData[order_id]["status"] = ret[key]["status"];
+                ClassData[order_id]["history"].push(ret[key]);
+              }
+              update_count++;
+            }
+            if (update_count > 0) {
+              showClassTable(classnum);
+            }
+            setTimeout(() => {if (isLogin) {checkInterval();}}, 1000);
           });
+        };
+
+        fetch(apiurl + "log_all", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: auth_key,
+          },
+        }).then(async (response) => {
+          if (response.status === 200) {
+            const ret = await response.json();
+            for (const key in ret) {
+              if (ret[key]["id"] < 7) continue; // 在庫管理用IDなので無視
+              ClassData[key] = {
+                order_items: ret[key]["order_items"],
+                status: ret[key]["status"],
+                ordered_at: Number(ret[key]["history"][0]["timestamp"]) * 1000,
+                history: ret[key]["history"],
+              };
+            }
+            showClassTable(classnum);
+          } else {
+            console.error("Error:", await response.text());
+            return;
+          }
+        });
+
+        checkInterval();
+        console.log("checkInterval start");
 
         return false;
       };
-      var ToCook = [0, 0]; // 調理待ちの各商品の総数
 
       // 表示処理
       function showClassTable(classIdx) {
@@ -431,10 +410,9 @@
 
         // 総数
         const summary = ToCook;
-        document.getElementById(
-          "summary-container"
-        ).innerHTML = `<div class="summary-item">${labels.items[0]}<br><span class="summary-num">${summary[0]}個</span></div>
-         <div class="summary-item">${labels.items[1]}<br><span class="summary-num">${summary[1]}個</span></div>`;
+        document.getElementById("summary-container").innerHTML = `
+        <div class="summary-item">${labels.items[0]}<br><span class="summary-num">${summary[0]}個</span></div>
+        <div class="summary-item">${labels.items[1]}<br><span class="summary-num">${summary[1]}個</span></div>`;
       }
 
       // テーブル生成
@@ -474,6 +452,8 @@
           )
             lastPaidIdx = idx;
         });
+        ToCook[0] = 0;
+        ToCook[1] = 0;
 
         sortedOrderNos.forEach((orderNo, idx) => {
           // 調理待ち→それ以外の境目に線を挿入
@@ -512,6 +492,7 @@
           const cellA = row.insertCell();
           cellA.textContent = order["order_items"]["item_1"] ?? 0;
           if (order.status === "調理中" && order["order_items"]["item_1"] > 0) {
+            ToCook[0] += order["order_items"]["item_1"];
             cellA.classList.add("highlight");
           }
 
@@ -519,6 +500,7 @@
           const cellB = row.insertCell();
           cellB.textContent = order["order_items"]["item_2"] ?? 0;
           if (order.status === "調理中" && order["order_items"]["item_2"] > 0) {
+            ToCook[1] += order["order_items"]["item_2"];
             cellB.classList.add("highlight");
           }
         });
