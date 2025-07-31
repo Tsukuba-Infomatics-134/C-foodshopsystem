@@ -505,6 +505,11 @@
       5: 1,
       6: 2,
     };
+    const index_to_id = {
+      0: 1,
+      1: 5,
+      2: 6,
+    };
 
     // ログイン処理
     document.getElementById("login-form").onsubmit = function () {
@@ -887,35 +892,45 @@
           showCustomConfirm(
             msg,
             () => {
-              //ToCookIDに含まれるIDについて、ステータスを調理済みに更新
+              //ToCookIDsに含まれるIDについて、ステータスを調理済みに更新
               let body = [];
-              ToCookID.forEach((id) => {
-                body.push({
-                  order_id: id,
-                  status: "調理済み",
-                });
+              ToCookIDs[idx].forEach((id) => {
+                body.push({order_id: Number(id), status: "調理済み", message: null});
               });
+              console.log("調理済みに変更: ", body)
 
-              fetch(apiurl + "change_status_multi", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  authorization: auth_key,
-                },
-                body: JSON.stringify({
-                  body: body,
-                  from_: 0,
-                }),
-              }).then((response) => {
-                if (response.status === 200) {
-                  return;
-                } else {
-                  console.error("Error:", response.text());
-                }
-              });
-              //次の調理すべき個数を計算
-              nowToCook(classData, 10, ToCooks[idx], ToCookIDs[idx]);
-              renderPanels();
+              if (body.length > 0) {
+                fetch(apiurl + "change_status_multi", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    authorization: auth_key,
+                  },
+                  body: JSON.stringify({
+                    body: body,
+                    from_: index_to_id[idx],
+                  }),
+                }).then((response) => {
+                  if (response.status === 200) {
+                    ToCookIDs[idx].forEach((id) => {
+                      allClassData[idx][String(id)].status = "調理済み";
+                      allClassData[idx][String(id)].history.push({
+                        status: "調理済み",
+                        message: null,
+                        timestamp: Date.now() / 1000,
+                      });
+                    });
+                    renderPanels();
+                  } else {
+                    console.error("Error:", response.text());
+                    return;
+                  }
+                });
+              }
+              setTimeout(() => {
+                // 1秒待ってから次に調理するものを計算する
+                nowToCook(classData, 10, idx);
+              }, 1000);
             },
             panel
           );
@@ -944,28 +959,28 @@
       [0, 0],
       [0, 0],
       [0, 0],
-    ];
-    var ToCookIDs = [[], [], []];
-    //ToCook_は参照渡し(var)
-    function nowToCook(data, limit, ToCook_, ToCookID) {
+    ];  // 各クラスの調理素材数
+    var ToCookIDs = [[], [], []];  // 各クラスの調理待ち注文ID
+
+    function nowToCook(data, limit, class_idx) {
       const orders = data;
-      ToCook_[0] = 0;
-      ToCook_[1] = 0;
-      ToCookID.length = 0; // 配列を空にする
+      // まずデータをリセット
+      ToCooks[class_idx][0] = 0;
+      ToCooks[class_idx][1] = 0;
+      ToCookIDs[class_idx].length = 0;
       Object.entries(orders).forEach(([id, order]) => {
         if (order.status === "調理待ち") {
           if (
-            ToCook_[0] +
-              ToCook_[1] +
+            ToCooks[class_idx][0] + ToCooks[class_idx][1] +
               (order["order_items"]["item_1"] ?? 0) +
               (order["order_items"]["item_2"] ?? 0) >
             limit
           ) {
             return;
           }
-          ToCook_[0] += order["order_items"]["item_1"] ?? 0;
-          ToCook_[1] += order["order_items"]["item_2"] ?? 0;
-          ToCookID.push(id);
+          ToCooks[class_idx][0] += order["order_items"]["item_1"] ?? 0;
+          ToCooks[class_idx][1] += order["order_items"]["item_2"] ?? 0;
+          ToCookIDs[class_idx].push(id);
           console.log(
             `ToCookIDに追加: ${id}, item_1: ${
               order["order_items"]["item_1"] ?? 0
@@ -975,30 +990,38 @@
       });
       //ToCookIDに含まれるIDについて、ステータスを調理中に更新
       let body = [];
-      ToCookID.forEach((id) => {
-        body.push({
-          order_id: id,
-          status: "調理中",
-        });
+      ToCookIDs[class_idx].forEach((id) => {
+        body.push({order_id: Number(id), status: "調理中", message: null});
       });
 
-      fetch(apiurl + "change_status_multi", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: auth_key,
-        },
-        body: JSON.stringify({
-          body: body,
-          from_: 0,
-        }),
-      }).then((response) => {
-        if (response.status === 200) {
-          return;
-        } else {
-          console.error("Error:", response.text());
-        }
-      });
+      if (body.length > 0) {
+        console.log("調理中に変更: ", ToCookIDs[class_idx])
+        fetch(apiurl + "change_status_multi", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: auth_key,
+          },
+          body: JSON.stringify({
+            body: body,
+            from_: index_to_id[class_idx],
+          }),
+        }).then((response) => {
+          if (response.status === 200) {
+            ToCookIDs[class_idx].forEach((id) => {
+              allClassData[class_idx][String(id)].status = "調理中";
+              allClassData[class_idx][String(id)].history.push({
+                status: "調理中",
+                message: null,
+                timestamp: Date.now() / 1000,
+              });
+            });
+            renderPanels();
+          } else {
+            console.error("Error:", response.text());
+          }
+        });
+      }
     }
 
     function openOperationModal(classIndex) {
