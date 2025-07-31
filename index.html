@@ -393,11 +393,14 @@
                   return;
                 }
                 for (const key in ret) {
+                  if (ret[key]["id"] < 7) continue; // 在庫管理用IDなので無視
                   ClassData[key] = {
                     ordered_at: null, // これはXが悪いです　まことに申し訳なき
                     order_items: ret[key]["order_items"],
                     status: ret[key]["status"],
                     history: ret[key]["history"],
+                    ordered_at:
+                      Number(ret[key]["history"][0]["timestamp"]) * 1000,
                   };
                 }
                 showClassTable(classnum);
@@ -410,6 +413,7 @@
 
         return false;
       };
+      var ToCook = [0, 0]; // 調理待ちの各商品の総数
 
       // 表示処理
       function showClassTable(classIdx) {
@@ -422,13 +426,7 @@
         const oldTable = container.querySelector("table");
         if (oldTable) oldTable.remove();
 
-        container.appendChild(
-          createOrderTable(
-            ClassData,
-            labels.items,
-            nowToCook(ClassData, max_per_cook[classIdx], ToCook)
-          )
-        );
+        container.appendChild(createOrderTable(ClassData, labels.items));
 
         // 総数
         const summary = ToCook;
@@ -439,8 +437,7 @@
       }
 
       // テーブル生成
-      function createOrderTable(orders, items, ToCookID) {
-        console.log("createOrderTable", ToCookID);
+      function createOrderTable(orders, items) {
         const table = document.createElement("table");
         const headers = ["番号", "注文時間", items[0], items[1]];
         const thead = table.createTHead();
@@ -455,8 +452,14 @@
 
         // 調理待ちの行が上に来るようにソート
         const sortedOrderNos = Object.keys(orders).sort((a, b) => {
-          const aPaid = orders[a].status === "調理待ち" ? 0 : 1;
-          const bPaid = orders[b].status === "調理待ち" ? 0 : 1;
+          const aPaid =
+            orders[a].status === "調理待ち" || orders[a].status === "調理中"
+              ? 0
+              : 1;
+          const bPaid =
+            orders[b].status === "調理待ち" || orders[b].status === "調理中"
+              ? 0
+              : 1;
           if (aPaid !== bPaid) return aPaid - bPaid;
           return a - b;
         });
@@ -464,7 +467,11 @@
         // 調理待ちの最後のindexを探す
         let lastPaidIdx = -1;
         sortedOrderNos.forEach((orderNo, idx) => {
-          if (orders[orderNo].status === "調理待ち") lastPaidIdx = idx;
+          if (
+            orders[orderNo].status === "調理待ち" ||
+            orders[orderNo].status === "調理中"
+          )
+            lastPaidIdx = idx;
         });
 
         sortedOrderNos.forEach((orderNo, idx) => {
@@ -484,7 +491,7 @@
           const row = tbody.insertRow();
 
           // 調理待ち以外の行にクラスを付与
-          if (order.status !== "調理待ち") {
+          if (order.status !== "調理待ち" && order.status !== "調理中") {
             row.classList.add("not-paid-row");
           }
 
@@ -494,6 +501,7 @@
 
           // 注文時間
           const cellTime = row.insertCell();
+          console.log(order.ordered_at);
           cellTime.textContent = new Date(order.ordered_at).toLocaleTimeString(
             "ja-JP",
             { hour: "2-digit", minute: "2-digit", second: "2-digit" }
@@ -502,25 +510,15 @@
           // 商品1
           const cellA = row.insertCell();
           cellA.textContent = order["order_items"]["item_1"] ?? 0;
-          if (
-            order.status === "調理待ち" &&
-            order["order_items"]["item_1"] > 0
-          ) {
-            if (ToCookID.includes(orderNo)) {
-              cellA.classList.add("highlight");
-            }
+          if (order.status === "調理中" && order["order_items"]["item_1"] > 0) {
+            cellA.classList.add("highlight");
           }
 
           // 商品2
           const cellB = row.insertCell();
           cellB.textContent = order["order_items"]["item_2"] ?? 0;
-          if (
-            order.status === "調理待ち" &&
-            order["order_items"]["item_2"] > 0
-          ) {
-            if (ToCookID.includes(orderNo)) {
-              cellB.classList.add("highlight");
-            }
+          if (order.status === "調理中" && order["order_items"]["item_2"] > 0) {
+            cellB.classList.add("highlight");
           }
         });
 
@@ -533,7 +531,7 @@
         let sumA = 0;
         let sumB = 0;
         Object.values(orders).forEach((order) => {
-          if (order.status === "調理待ち") {
+          if (order.status === "調理中") {
             sumA += order["order_items"]["item_1"] ?? 0;
             sumB += order["order_items"]["item_2"] ?? 0;
           }
@@ -541,24 +539,6 @@
         return [sumA, sumB];
       }
 
-      var ToCook = [0, 0];
-      //ToCookは参照渡し
-      function nowToCook(data, limit, ToCook_) {
-        const orders = data;
-        ToCook_[0] = 0;
-        ToCook_[1] = 0;
-        ToCookID = [];
-        Object.entries(orders).forEach(([id, order]) => {
-          if (order.status === "調理中") {
-            ToCook_[0] += order["order_items"]["item_1"] ?? 0;
-            ToCook_[1] += order["order_items"]["item_2"] ?? 0;
-            ToCookID.push(id);
-          }
-        });
-        console.log("ToCook", ToCook_);
-        console.log("ToCookID(nowToCookの返り値)", ToCookID);
-        return ToCookID;
-      }
       let escKeyDownTime = null;
 
       document.addEventListener("keydown", function (event) {
