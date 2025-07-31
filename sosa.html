@@ -540,35 +540,30 @@
           const checkInterval = () => {
             check().then(async (ret) => {
               console.log("checked", ret);
+              let updated = 0;
               for (const key in ret) {
-                if (id_to_index[ret[key]["user"]] == 3) {
+                const order_id = ret[key]["order_id"]
+                const class_idx = id_to_index[ret[key]["user"]];
+                if (class_idx == 3) {
                   continue;
                 }
-                // 対象クラスデータが未定義なら初期化
-                if (!allClassData[id_to_index[ret[key]["user"]]]) {
-                  allClassData[id_to_index[ret[key]["user"]]] = {};
-                }
-                if (!allClassData[id_to_index[ret[key]["user"]]][key]) {
-                  console.log(`新規注文: ${key} for user ${ret[key]["user"]}`);
-                  allClassData[id_to_index[ret[key]["user"]]][key] = {
-                    ordered_at: ret[key]["history"][0]["timestamp"],
+                if (!allClassData[class_idx][order_id]) {
+                  console.log(`新規注文: ${order_id} for user ${ret[key]["user"]}`);
+                  allClassData[class_idx][order_id] = {
+                    ordered_at: Number(ret[key]["timestamp"]) * 1000,
                     order_items: ret[key]["order_items"],
                     status: ret[key]["status"],
-                    history: ret[key]["history"],
+                    history: [],
                   };
                 } else {
                   // 既存の注文があれば更新
-                  allClassData[id_to_index[ret[key]["user"]]][key].order_items =
-                    ret[key]["order_items"];
-                  allClassData[id_to_index[ret[key]["user"]]][key].status =
-                    ret[key]["status"];
-                  allClassData[id_to_index[ret[key]["user"]]][key].history =
-                    ret[key]["history"];
+                  allClassData[class_idx][order_id].status = ret[key]["status"];
+                  allClassData[class_idx][order_id].history.push(ret[key]);
                 }
+                updated += 1;
               }
-              if (ret.length > 0) {
+              if (updated > 0) {
                 updateAllClasses();
-                console.log("更新があったよ☆☆☆");
               }
 
               //Cはcheckを送る。
@@ -606,11 +601,10 @@
                 return;
               }
               for (const key in ret) {
-                if (id_to_index[ret[key]["user"]] == 3) {
-                  continue;
-                }
+                if (id_to_index[ret[key]["user"]] == 3) continue;
+                if (ret[key]["type"] == "x") continue;
                 allClassData[id_to_index[ret[key]["user"]]][key] = {
-                  ordered_at: null, // これはXが悪いです　まことに申し訳なき
+                  ordered_at: Number(ret[key]["history"][0]["timestamp"]) * 1000,
                   order_items: ret[key]["order_items"],
                   status: ret[key]["status"],
                   history: ret[key]["history"],
