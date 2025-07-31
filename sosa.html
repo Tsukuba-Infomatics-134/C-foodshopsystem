@@ -35,8 +35,7 @@
         margin-bottom: 24px;
         font-size: 1.6em;
       }
-      .login-box select,
-      .login-box input {
+      .login-box select, .login-box input {
         font-size: 1.1em;
         padding: 8px 12px;
         margin-bottom: 16px;
@@ -105,9 +104,7 @@
         width: 100%;
         border-collapse: collapse;
       }
-
-      th,
-      td {
+      th, td {
         border: 2px solid #000000;
         padding: 6px 8px;
         text-align: center !important;
@@ -435,12 +432,7 @@
       <form class="login-box" id="login-form" onsubmit="return false;">
         <h2>LOGIN</h2>
         <div class="login-error" id="login-error"></div>
-        <input
-          type="password"
-          id="class-pass"
-          placeholder="パスワード"
-          required
-        />
+        <input type="password" id="class-pass" placeholder="パスワード" required />
         <button type="submit">ログイン</button>
       </form>
     </div>
@@ -502,7 +494,7 @@
     const apiurl = "https://api.yaakiyu.f5.si/";
     let auth_key = null;
     let isLogin = false;
-    const id_to_index = {
+    const id_to_index = {  // クラス番号->allClassDataのインデックス
       0: 3,
       1: 0,
       2: 3,
@@ -511,11 +503,29 @@
       5: 1,
       6: 2,
     };
-    const index_to_id = {
+    const index_to_id = {  // allClassDataのインデックス->クラス番号
       0: 1,
       1: 5,
       2: 6,
     };
+    const class_limits = {  // クラスごとの調理上限数
+      0: 10,  // 1組
+      1: 10,  // 5組
+      2: 10,  // 6組
+    }
+    var ToCooks = [  // 各クラスの調理素材数
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ];
+    var ToCookIDs = [[], [], []];  // 各クラスの調理待ち注文ID
+    const allClassData = [{}, {}, {}];  // 3クラス分のデータ
+    const sortByIdFlags = [false, false, false]; // クラスごとのソート状態
+    const classLabels = [  // クラスごとの商品名
+      { name: "1組", items: ["プレーン", "抹茶"] },
+      { name: "5組", items: ["コンソメ", "バター醤油"] },
+      { name: "6組", items: ["明太チーズ", "プレーン"] },
+    ];
 
     // ログイン処理
     document.getElementById("login-form").onsubmit = function () {
@@ -528,110 +538,101 @@
           "Content-Type": "application/json",
           password: pass,
         },
-      })
-        .then(async (response) => {
-          const data = await response.json();
+      }).then(async (response) => {
+        const data = await response.json();
 
-          if (response.status === 401) {
-            errorDiv.textContent = "パスワードが違います。";
-            document.getElementById("class-pass").value = "";
-            return null;
-          } else if (response.status !== 200) {
-            alert("ログイン中にエラーが発生しました。");
-            console.error(data);
-            return null;
-          }
-          isLogin = true;
-          auth_key = data["token"];
-          // ログイン成功
-          errorDiv.textContent = "";
-          document.getElementById("login-wrap").style.display = "none";
-          document.getElementById("main-wrap").style.display = "flex";
+        if (response.status === 401) {
+          errorDiv.textContent = "パスワードが違います。";
+          document.getElementById("class-pass").value = "";
+          return null;
+        } else if (response.status !== 200) {
+          alert("ログイン中にエラーが発生しました。");
+          console.error(data);
+          return null;
+        }
+        isLogin = true;
+        auth_key = data["token"];
+        // ログイン成功
+        errorDiv.textContent = "";
+        document.getElementById("login-wrap").style.display = "none";
+        document.getElementById("main-wrap").style.display = "flex";
 
-          const checkInterval = () => {
-            check().then(async (ret) => {
-              let update_count = 0;
-              ret.forEach((updated) => {
-                if (updated.order_id < 7) {
-                  // 在庫管理用IDなので無視
-                  return;
-                }
-                const class_idx = id_to_index[updated.user];
-                if (class_idx == 3) {
-                  return;
-                }
-                if (!allClassData[class_idx][updated.order_id]) {
-                  console.log(`新規注文: ${updated.order_id} for user ${updated.user}`);
-                  allClassData[class_idx][updated.order_id] = {
-                    ordered_at: Number(updated.timestamp) * 1000,
-                    order_items: updated.order_items,
-                    status: updated.status,
-                    history: [],
-                  };
-                } else {
-                  console.log(`更新注文: ${updated.order_id} for user ${updated.user}`);
-                  // 既存の注文があれば更新
-                  allClassData[class_idx][updated.order_id].status = updated.status;
-                  allClassData[class_idx][updated.order_id].history.push(updated);
-                }
-                update_count += 1;
-              });
-              if (update_count > 0) {
-                updateAllClasses();
-              }
-
-              //Cはcheckを送る。
-              setTimeout(() => {
-                if (isLogin) {
-                  checkInterval();
-                }
-              }, 1000);
-            });
-          };
-
-          fetch(apiurl + "log_all", {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              authorization: auth_key,
-            },
-          })
-            .then((response) => {
-              if (response.status === 200) {
-                return response.json();
-              } else {
-                console.error("Error:", response.text());
-              }
-            })
-            .then((ret) => {
-              allClassData.forEach((classData, idx) => {
-                // クラスごとのデータを初期化
-                allClassData[idx] = {};
-              });
-              if (ret == null) {
+        const checkInterval = () => {
+          check().then(async (ret) => {
+            let update_count = 0;
+            ret.forEach((updated) => {
+              if (updated.order_id < 7) {
+                // 在庫管理用IDなので無視
                 return;
               }
-              for (const key in ret) {
-                if (id_to_index[ret[key]["user"]] == 3) continue;
-                if (ret[key]["id"] < 7) continue;  // 在庫管理用IDなので無視
-                allClassData[id_to_index[ret[key]["user"]]][ret[key]["id"]] = {
-                  ordered_at: Number(ret[key]["history"][0]["timestamp"]) * 1000,
-                  order_items: ret[key]["order_items"],
-                  status: ret[key]["status"],
-                  history: ret[key]["history"],
-                };
+              const class_idx = id_to_index[updated.user];
+              if (class_idx == 3) {
+                return;
               }
-              updateAllClasses();
+              if (!allClassData[class_idx][updated.order_id]) {
+                console.log(`新規注文: ${updated.order_id} for user ${updated.user}`);
+                allClassData[class_idx][updated.order_id] = {
+                  ordered_at: Number(updated.timestamp) * 1000,
+                  order_items: updated.order_items,
+                  status: updated.status,
+                  history: [],
+                };
+              } else {
+                console.log(`更新注文: ${updated.order_id} for user ${updated.user}`);
+                // 既存の注文があれば更新
+                allClassData[class_idx][updated.order_id].status = updated.status;
+                allClassData[class_idx][updated.order_id].history.push(updated);
+              }
+              update_count += 1;
             });
+            if (update_count > 0) {
+              updateAllClasses();
+            }
 
-          checkInterval();
-          console.log("checkInterval start");
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          alert("ログイン中にエラーが発生しました。");
+            //Cはcheckを送る。
+            setTimeout(() => { if (isLogin) { checkInterval(); } }, 1000);
+          });
+        };
+
+        fetch(apiurl + "log_all", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: auth_key,
+          },
+        }).then((response) => {
+          if (response.status === 200) {
+            return response.json();
+          } else {
+            console.error("Error:", response.text());
+          }
+        }).then((ret) => {
+          allClassData.forEach((classData, idx) => {
+            // クラスごとのデータを初期化
+            allClassData[idx] = {};
+          });
+          if (ret == null) {
+            return;
+          }
+          for (const key in ret) {
+            if (id_to_index[ret[key]["user"]] == 3) continue;
+            if (ret[key]["id"] < 7) continue;  // 在庫管理用IDなので無視
+            allClassData[id_to_index[ret[key]["user"]]][ret[key]["id"]] = {
+              ordered_at: Number(ret[key]["history"][0]["timestamp"]) * 1000,
+              order_items: ret[key]["order_items"],
+              status: ret[key]["status"],
+              history: ret[key]["history"],
+            };
+          }
+          updateAllClasses();
         });
 
+        checkInterval();
+        console.log("checkInterval start");
+      }).catch((error) => {
+        console.error("Error:", error);
+        alert("ログイン中にエラーが発生しました。");
+      });
 
       return false;
     };
@@ -643,39 +644,19 @@
           "Content-Type": "application/json",
           authorization: auth_key,
         },
-      })
-        .then(async (response) => {
-          if (response.status === 200) {
-            return await response.json();
-          } else {
-            console.error("Error:", response.text());
-            return null;
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          alert("APIエラーが発生しました。");
+      }).then(async (response) => {
+        if (response.status === 200) {
+          return await response.json();
+        } else {
+          console.error("Error:", response.text());
           return null;
-        });
+        }
+      }).catch((error) => {
+        console.error("Error:", error);
+        alert("APIエラーが発生しました。");
+        return null;
+      });
     }
-    // クラスごとの商品名
-    const classLabels = [
-      { name: "1組", items: ["プレーン", "抹茶"] },
-      { name: "5組", items: ["コンソメ", "バター醤油"] },
-      { name: "6組", items: ["明太チーズ", "プレーン"] },
-    ];
-
-    // 3クラス分のデータ（2組・3組・4組を削除）
-    const allClassData = [
-      // 1組: プレーン・抹茶
-      {},
-      // 5組: コンソメ・バター醤油
-      {},
-      // 6組: 明太チーズ・プレーン
-      {},
-    ];
-
-    const sortByIdFlags = [false, false, false]; // クラスごとのソート状態
 
     // 1と2の同時押しで更新
     const pressedKeys = new Set();
@@ -927,12 +908,6 @@
       });
     }
 
-    var ToCooks = [
-      [0, 0],
-      [0, 0],
-      [0, 0],
-    ];  // 各クラスの調理素材数
-    var ToCookIDs = [[], [], []];  // 各クラスの調理待ち注文ID
 
     function nextTurn(class_idx) {
       // 調理中 -> 調理済み
@@ -943,7 +918,6 @@
       console.log("調理済みに変更: ", ToCookIDs[class_idx])
 
       // 調理待ち -> 調理中
-      const limit = 10; // TODO: クラスによって上限を変える
       ToCooks[class_idx][0] = 0;
       ToCooks[class_idx][1] = 0;
       ToCookIDs[class_idx].length = 0;
@@ -953,7 +927,7 @@
             ToCooks[class_idx][0] + ToCooks[class_idx][1] +
               (order["order_items"]["item_1"] ?? 0) +
               (order["order_items"]["item_2"] ?? 0) >
-            limit
+            class_limits[class_idx]
           ) {
             return;
           }
@@ -977,7 +951,7 @@
         if (order.status === "呼び出し待ち") {
           if (
             tocook_next + (order["order_items"]["item_1"] ?? 0) +
-            (order["order_items"]["item_2"] ?? 0) >= limit * 3
+            (order["order_items"]["item_2"] ?? 0) >= class_limits[class_idx] * 3
           ) {return;}
           tocook_next += (order["order_items"]["item_1"] ?? 0) + (order["order_items"]["item_2"] ?? 0);
           body.push({order_id: Number(id), status: "呼び出し中", message: null});

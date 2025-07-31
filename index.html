@@ -370,8 +370,6 @@
                 }, 1000);
               });
             };
-            checkInterval();
-            console.log("checkInterval start");
 
             fetch(apiurl + "log_all", {
               method: "GET",
@@ -405,6 +403,9 @@
                 }
                 showClassTable(classnum);
               });
+
+            checkInterval();
+            console.log("checkInterval start");
           })
           .catch((error) => {
             console.error("Error:", error);
