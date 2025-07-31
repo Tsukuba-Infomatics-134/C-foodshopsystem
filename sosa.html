@@ -547,7 +547,7 @@
               console.log("checked", ret);
               let updated = 0;
               for (const key in ret) {
-                const order_id = ret[key]["order_id"]
+                const order_id = String(ret[key]["order_id"]);
                 const class_idx = id_to_index[ret[key]["user"]];
                 if (class_idx == 3) {
                   continue;
@@ -579,8 +579,6 @@
               }, 1000);
             });
           };
-          checkInterval();
-          console.log("checkInterval start");
 
           fetch(apiurl + "log_all", {
             method: "GET",
@@ -617,11 +615,15 @@
               }
               updateAllClasses();
             });
+
+          checkInterval();
+          console.log("checkInterval start");
         })
         .catch((error) => {
           console.error("Error:", error);
           alert("ログイン中にエラーが発生しました。");
         });
+
 
       return false;
     };
