@@ -825,10 +825,12 @@
               return Number(a[0]) - Number(b[0]); // ID順
             } else {
               const statusOrder = {
-                調理待ち: 0,
-                呼び出し中: 1,
-                呼び出し待ち: 2,
-                調理済み: 3,
+                調理中: 0,
+                調理待ち: 1,
+                呼び出し中: 2,
+                呼び出し待ち: 3,
+                調理済み: 4,
+                受け渡し済み: 5,
               };
               return statusOrder[a[1].status] - statusOrder[b[1].status]; // ステータス順
             }
@@ -840,10 +842,12 @@
             const row = document.createElement("tr");
             row.className =
               {
-                呼び出し前: "status-before",
+                呼び出し待ち: "status-before",
                 呼び出し中: "status-calling",
-                支払い済み: "status-paid",
+                調理待ち: "status-before-cooking",
+                調理中: "status-cooking",
                 調理済み: "status-cooked",
+                受け渡し済み: "status-paid",
               }[order.status] || "";
 
             row.innerHTML = `
