@@ -990,6 +990,20 @@
       }
     }
 
+    function syncCookingStatus() {
+      for (let class_idx = 0; class_idx < 3; class_idx++) {
+        ToCooks[class_idx][0] = 0;
+        ToCooks[class_idx][1] = 0;
+        ToCookIDs[class_idx].length = 0;
+        Object.entries(allClassData[class_idx]).forEach(([id, order]) => {
+          if (order.status === "調理中") {
+            ToCooks[class_idx][0] += order.order_items["item_1"] ?? 0;
+            ToCooks[class_idx][1] += order.order_items["item_2"] ?? 0;
+            ToCookIDs[class_idx].push(id);
+          }
+        });
+      }
+    }
 
     function openOperationModal(classIndex) {
       console.log("openOperationModal called with", classIndex);
@@ -1147,6 +1161,7 @@
 
     function updateAllClasses() {
       renderPanels();
+      syncCookingStatus();
       showUpdateMessage();
     }
 
