@@ -233,7 +233,11 @@
   <body>
     <!-- ログイン画面 -->
     <div class="login-wrap" id="login-wrap">
-      <form class="login-box" id="login-form" onsubmit="loginFormSubmitted(); return false;">
+      <form
+        class="login-box"
+        id="login-form"
+        onsubmit="loginFormSubmitted(); return false;"
+      >
         <h2>PLEAAAAAAAAAAAAAAAAASE LOGIN</h2>
         <div class="login-error" id="login-error"></div>
         <input
@@ -279,7 +283,8 @@
         10, // 6組
       ];
 
-      const apiurl = "https://api.yaakiyu.f5.si/";
+      // const apiurl = "https://api.yaakiyu.f5.si/";
+      const apiurl = "http://localhost/";
       let auth_key = null;
       let classnum = 0;
       let isLogin = false;
@@ -325,7 +330,9 @@
           return await response.json();
         });
 
-        if (!data) {return false;}
+        if (!data) {
+          return false;
+        }
         console.log(data);
         isLogin = true;
         auth_key = data["token"];
@@ -349,9 +356,10 @@
                   status: ret[key]["status"],
                   history: [ret[key]],
                 };
-              }
-              else {
-                console.log(`更新注文 No.${order_id}: ${ClassData[order_id]["status"]} -> ${ret[key]["status"]}`);
+              } else {
+                console.log(
+                  `更新注文 No.${order_id}: ${ClassData[order_id]["status"]} -> ${ret[key]["status"]}`
+                );
                 ClassData[order_id]["status"] = ret[key]["status"];
                 ClassData[order_id]["history"].push(ret[key]);
               }
@@ -360,7 +368,11 @@
             if (update_count > 0) {
               showClassTable(classnum);
             }
-            setTimeout(() => {if (isLogin) {checkInterval();}}, 1000);
+            setTimeout(() => {
+              if (isLogin) {
+                checkInterval();
+              }
+            }, 1000);
           });
         };
 
@@ -393,7 +405,7 @@
         console.log("checkInterval start");
 
         return false;
-      };
+      }
 
       // 表示処理
       function showClassTable(classIdx) {

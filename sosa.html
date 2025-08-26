@@ -137,17 +137,7 @@
         font-size: 1em;
         font-weight: normal;
       }
-      .done-badge {
-        display: inline-block;
-        background: #ff6b6b;
-        color: #fff;
-        font-weight: bold;
-        border-radius: 20px;
-        padding: 6px 22px;
-        font-size: 1.2em;
-        margin-bottom: 12px;
-        margin-top: 8px;
-      }
+
       .side-info {
         width: 100%;
         margin-left: 0;
@@ -178,7 +168,7 @@
         color: #222;
         margin-left: 2px;
       }
-      .side-info .done-badge {
+      .side-info {
         margin-bottom: 0;
         margin-top: 0;
         margin-right: 8px;
@@ -498,7 +488,8 @@
     </div>
   </body>
   <script>
-    const apiurl = "https://api.yaakiyu.f5.si/";
+    // const apiurl = "https://api.yaakiyu.f5.si/";
+    const apiurl = "http://localhost/";
     let auth_key = null;
     let isLogin = false;
     const id_to_index = {
@@ -806,12 +797,6 @@
         const isAllDone = Object.values(classData).every(
           (order) => order["status"] === "調理済み"
         );
-        if (isAllDone) {
-          const badge = document.createElement("div");
-          badge.className = "done-badge";
-          badge.textContent = "調理完了";
-          side.appendChild(badge);
-        }
 
         const label = document.createElement("div");
         label.className = "summary-label";
