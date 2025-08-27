@@ -477,6 +477,9 @@
             sepCell.style.border = "none";
             sepCell.innerHTML = `<div style="height:18px;"></div>`;
           }
+          if (order.status === "受け渡し済み") {
+            return;
+          }
 
           const order = orders[orderNo];
           console.log(orderNo);
