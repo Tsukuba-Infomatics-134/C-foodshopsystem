@@ -477,11 +477,11 @@
             sepCell.style.border = "none";
             sepCell.innerHTML = `<div style="height:18px;"></div>`;
           }
+
+          const order = orders[orderNo];
           if (order.status === "受け渡し済み") {
             return;
           }
-
-          const order = orders[orderNo];
           console.log(orderNo);
           console.log(order);
           const row = tbody.insertRow();
