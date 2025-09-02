@@ -144,7 +144,7 @@ let currentItem = null;  // 現在選択中のアイテム（モーダルを開�
 const apiurl_dev = "http://localhost:80/";
 const apiurl_production = "https://api.yaakiyu.f5.si/";
 
-let apiurl = apiurl_dev;
+let apiurl = apiurl_production;
 
 function tryDevApiUrlSwitch() {
   fetch(
@@ -163,19 +163,21 @@ tryDevApiUrlSwitch();
 
 function getItemsToRender() {
   const data = [];
-  allOrdersData.forEach((order, index) => {
+  for(let order_id in allOrdersData) {
+    const order = allOrdersData[order_id];
     if (order.status === "調理待ち") {
       data.push({
-        id: index,
+        id: order_id,
         item_1: order.order_items["item_1"] || 0,
         item_2: order.order_items["item_2"] || 0,
       });
     }
-  });
+  }
   return data;
 }
 
 function renderBoxes() {
+  container.innerHTML = "";
   const data = getItemsToRender();
   // ボタン生成
   data.forEach(item => {
@@ -213,17 +215,25 @@ function yeahClicked() {
       "Content-Type": "application/json",
       authorization: auth_key,
     },
-    body: {
+    body: JSON.stringify({
       order_id: currentItem.id,
       status: "受け渡し済み",
       message: null
-    }
+    })
   }).then((response) => {
     if (!response.ok){
       console.error("Error:", response.text());
       alert("リクエストエラーが発生しました。");
       return;
     }
+  });
+  // データを更新する
+  allOrdersData[currentItem.id]["status"] = "受け渡し済み";
+  allOrdersData[currentItem.id]["history"].push({
+    order_id: currentItem.id,
+    status: "受け渡し済み",
+    timestamp: Math.floor(Date.now() / 1000),
+    message: null
   });
   // 該当のボタンを消す
   const btn = document.getElementById(`box-${currentItem.id}`);
