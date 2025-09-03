@@ -345,7 +345,7 @@ function login() {
           const order = allOrdersData[order_id];
           if (order.status === "呼び出し中") {
             const timestamp = order.history[order.history.length - 1].timestamp;
-            if (Date.now() - timestamp * 1000 > 60 * 15) {
+            if (Date.now() - timestamp * 1000 > 15 * 60 * 1000) {
               // タイムアウト、自動キャンセル
               body.push({
                 order_id: order_id, status: "キャンセル済み", message: null
