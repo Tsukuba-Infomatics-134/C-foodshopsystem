@@ -332,14 +332,14 @@ function login() {
           }
           update_count++;
         }
-        
-        const body = [];
 
         if (update_count > 0) {
-          const nexts = calculateNextCall();
-          for (let i of nexts) body.push(i);
           renderBoxes();
         }
+
+        const body = [];
+        const nexts = calculateNextCall();
+        for (let i of nexts) body.push(i);
 
         for (const order_id in allOrdersData) {
           const order = ret[order_id];
@@ -386,8 +386,6 @@ function login() {
         return;
       }
     });
-    const body = calculateNextCall();
-    if (body) changeStatusMulti(body);
 
     checkInterval();
     console.log("checkInterval start");
