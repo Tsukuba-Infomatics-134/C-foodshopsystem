@@ -233,8 +233,7 @@ function changeStatusMulti(body){
       "Content-Type": "application/json",
       authorization: auth_key,
     },
-    body: JSON.stringify(body),
-    from_: classNumber
+    body: JSON.stringify({body: body, from_: classNumber})
   }).then((response) => {
     if (!response.ok){
       console.error("Error:", response.text());
