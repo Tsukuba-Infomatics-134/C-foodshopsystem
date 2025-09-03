@@ -332,13 +332,15 @@ function login() {
           }
           update_count++;
         }
+        
+        const body = [];
+
         if (update_count > 0) {
-          const body = calculateNextCall();
-          if (body) changeStatusMulti(body);
+          const nexts = calculateNextCall();
+          for (let i of nexts) body.push(i);
           renderBoxes();
         }
 
-        const body = [];
         for (const order_id in allOrdersData) {
           const order = ret[order_id];
           if (order.status === "呼び出し中") {
