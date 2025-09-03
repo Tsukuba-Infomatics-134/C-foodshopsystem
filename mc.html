@@ -235,21 +235,38 @@ function changeStatusMulti(body){
     },
     body: JSON.stringify({body: body, from_: classNumber})
   }).then((response) => {
+    if (response.status === 429) {
+      const retryAfter = response.headers.get("Retry-After");
+      let delay = 0;
+      const sec = parseFloat(retryAfter);
+      if (!isNaN(sec)) {
+        delay = sec * 1000;
+      } else {
+        delay = 1000;
+      }
+      console.warn(
+        `Too many requests, Retry after: ${retryAfter} (${Math.max(delay, 500)}ms)`
+      );
+      setTimeout(() => {
+        changeStatusMulti(body);
+      }, Math.max(delay, 500));
+      return;
+    }
     if (!response.ok){
       console.error("Error:", response.text());
       alert("リクエストエラーが発生しました。");
       return;
     }
+    // データを更新する
+    for (let order of body) {
+      allOrdersData[order["order_id"]]["status"] = order["status"];
+      allOrdersData[order["order_id"]]["history"].push({
+        status: order["status"],
+        timestamp: Math.floor(Date.now() / 1000),
+        message: order["message"]
+      });
+    }
   });
-  // データを更新する
-  for (let order of body) {
-    allOrdersData[order["order_id"]]["status"] = order["status"];
-    allOrdersData[order["order_id"]]["history"].push({
-      status: order["status"],
-      timestamp: Math.floor(Date.now() / 1000),
-      message: order["message"]
-    });
-  }
 }
 
 
