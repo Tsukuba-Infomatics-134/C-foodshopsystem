@@ -217,6 +217,16 @@ function yeahClicked() {
   for (let i of nextChange) body.push(i);
 
   // ステータスを更新する
+  changeStatusMulti(body);
+  // 該当のボタンを消す
+  const btn = document.getElementById(`box-${currentItem.id}`);
+  if (btn) btn.remove();
+
+  closeModal();
+}
+
+
+function changeStatusMulti(body){
   fetch(apiurl + "change_status_multi", {
     method: "POST",
     headers: {
@@ -241,15 +251,10 @@ function yeahClicked() {
       message: order["message"]
     });
   }
-  // 該当のボタンを消す
-  const btn = document.getElementById(`box-${currentItem.id}`);
-  if (btn) btn.remove();
-
-  closeModal();
 }
 
 
-function calculateNextCall(now_id) {
+function calculateNextCall(now_id = 0) {
   let now_call_count = 0;
   for (let order_id in allOrdersData) {
     const order = allOrdersData[order_id];
@@ -329,6 +334,8 @@ function login() {
           update_count++;
         }
         if (update_count > 0) {
+          const body = calculateNextCall();
+          if (body) changeStatusMulti(body);
           renderBoxes();
         }
         setTimeout(() => {if (isLogin) {checkInterval();}}, 1000);
@@ -362,6 +369,8 @@ function login() {
         return;
       }
     });
+    const body = calculateNextCall();
+    if (body) changeStatusMulti(body);
 
     checkInterval();
     console.log("checkInterval start");
