@@ -184,11 +184,9 @@ function renderBoxes() {
     const btn = document.createElement("div");
     btn.className = "box";
     btn.id = `box-${item.id}`;
-    btn.innerHTML = `
-      <div class="number">${item.id}番</div>
-      <div class="item">${itemNames[classNumber].item_1}　${item.item_1}個</div>
-      <div class="item">${itemNames[classNumber].item_2}　${item.item_2}個</div>
-    `;
+    btn.innerHTML = `<div class="number">${item.id}番</div>`;
+    if (item.item_1 !== 0) btn.innerHTML += `<div class="item">${itemNames[classNumber].item_1}　${item.item_1}個</div>`;
+    if (item.item_2 !== 0) btn.innerHTML += `<div class="item">${itemNames[classNumber].item_2}　${item.item_2}個</div>`;
     btn.onclick = () => openModal(item);
     container.appendChild(btn);
   });
@@ -208,18 +206,25 @@ function closeModal() {
 
 function yeahClicked() {
   if (!currentItem) return;
+
+  const body = [];
+  body.push({
+    order_id: currentItem.id,
+    status: "受け渡し済み",
+    message: null
+  })
+  const nextChange = calculateNextCall(currentItem.id);
+  for (let i of nextChange) body.push(i);
+
   // ステータスを更新する
-  fetch(apiurl + "change_status", {
+  fetch(apiurl + "change_status_multi", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       authorization: auth_key,
     },
-    body: JSON.stringify({
-      order_id: currentItem.id,
-      status: "受け渡し済み",
-      message: null
-    })
+    body: JSON.stringify(body),
+    from_: classNumber
   }).then((response) => {
     if (!response.ok){
       console.error("Error:", response.text());
@@ -228,18 +233,49 @@ function yeahClicked() {
     }
   });
   // データを更新する
-  allOrdersData[currentItem.id]["status"] = "受け渡し済み";
-  allOrdersData[currentItem.id]["history"].push({
-    order_id: currentItem.id,
-    status: "受け渡し済み",
-    timestamp: Math.floor(Date.now() / 1000),
-    message: null
-  });
+  for (let order of body) {
+    allOrdersData[order["order_id"]]["status"] = order["status"];
+    allOrdersData[order["order_id"]]["history"].push({
+      status: order["status"],
+      timestamp: Math.floor(Date.now() / 1000),
+      message: order["message"]
+    });
+  }
   // 該当のボタンを消す
   const btn = document.getElementById(`box-${currentItem.id}`);
   if (btn) btn.remove();
 
   closeModal();
+}
+
+
+function calculateNextCall(now_id) {
+  let now_call_count = 0;
+  for (let order_id in allOrdersData) {
+    const order = allOrdersData[order_id];
+    if (order.status === "呼び出し中" || order.status === "調理待ち") {
+      if (order_id === now_id) continue;
+      now_call_count += order.order_items["item_1"] || 0
+      now_call_count += order.order_items["item_2"] || 0
+    }
+  }
+
+  const body = [];
+  for (let order_id in allOrdersData) {
+    const order = allOrdersData[order_id];
+    if (now_call_count >= 20) break;
+    if (order.status == "呼び出し待ち") {
+      body.push({
+        order_id: order_id,
+        status: "呼び出し中",
+        message: null
+      });
+      now_call_count += order.order_items["item_1"] || 0
+      now_call_count += order.order_items["item_2"] || 0
+    }
+  }
+
+  return body
 }
 
 
