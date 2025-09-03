@@ -337,6 +337,22 @@ function login() {
           if (body) changeStatusMulti(body);
           renderBoxes();
         }
+
+        const body = [];
+        for (const order_id in allOrdersData) {
+          const order = ret[order_id];
+          if (order.status === "呼び出し中") {
+            const timestamp = order.history[order.history - 1].timestamp;
+            if (Date.now() - timestamp * 1000 > 60 * 15) {
+              // タイムアウト、自動キャンセル
+              body.push({
+                order_id: order_id, status: "キャンセル済み", message: null
+              });
+            }
+          }
+        }
+        if (body) changeStatusMulti(body);
+
         setTimeout(() => {if (isLogin) {checkInterval();}}, 1000);
       }).catch((error) => {
         console.error(error);
