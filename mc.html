@@ -141,10 +141,10 @@ let isOnline = navigator.onLine;
 let auth_key = null;
 let currentItem = null;  // 現在選択中のアイテム（モーダルを開いている番号）
 
-const apiurl_dev = "http://localhost:80/";
+const apiurl_dev = "https://didactic-space-bassoon-r4wxv7xv79w4cj5g-80.app.github.dev/";
 const apiurl_production = "https://api.yaakiyu.f5.si/";
 
-let apiurl = apiurl_production;
+let apiurl = apiurl_dev;
 
 function tryDevApiUrlSwitch() {
   fetch(
@@ -210,7 +210,7 @@ function yeahClicked() {
   const body = [];
   body.push({
     order_id: currentItem.id,
-    status: "受け渡し済み",
+    status: "提供済み",
     message: null
   })
   const nextChange = calculateNextCall(currentItem.id);
