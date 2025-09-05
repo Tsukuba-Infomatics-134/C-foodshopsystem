@@ -101,6 +101,7 @@
 
   <div id="main" style="display:none;">
     <h1 id="class-number-title">0組</h1><!-- じゃが☆じゃが☆ぽて△ぽて△デリシャス♪ぽていとっ！ -->
+    <div id="offline" style="display:none;">現在オフラインです。情報IIの生徒に連絡してください。</div>
 
     <div class="grid" id="buttons-container">
       <!-- ボタンはJavaScriptで追加 -->
@@ -141,7 +142,7 @@ let isOnline = navigator.onLine;
 let auth_key = null;
 let currentItem = null;  // 現在選択中のアイテム（モーダルを開いている番号）
 
-const apiurl_dev = "https://didactic-space-bassoon-r4wxv7xv79w4cj5g-80.app.github.dev/";
+const apiurl_dev = "http://localhost:80/";
 const apiurl_production = "https://api.yaakiyu.f5.si/";
 
 let apiurl = apiurl_production;
@@ -159,6 +160,12 @@ function tryDevApiUrlSwitch() {
   });
 }
 tryDevApiUrlSwitch();
+
+
+function setOnlineStatus(online) {
+  isOnline = online;
+  document.getElementById("offline").style.display = isOnline ? "none" : "block";
+}
 
 
 function getItemsToRender() {
@@ -255,6 +262,7 @@ function changeStatusMulti(body){
     if (!response.ok){
       console.error("Error:", response.text());
       alert("リクエストエラーが発生しました。");
+      setOnlineStatus(false);
       return;
     }
     // データを更新する
@@ -282,9 +290,11 @@ function calculateNextCall(now_id = 0) {
   }
 
   const body = [];
+  let i = 0;
   for (let order_id in allOrdersData) {
+    i++;
     const order = allOrdersData[order_id];
-    if (now_call_count >= 20) break;
+    if (now_call_count >= 20 && i >= 5) break;
     if (order.status == "呼び出し待ち") {
       body.push({
         order_id: order_id,
@@ -309,16 +319,21 @@ function login() {
       password: password,
     },
   }).then(async (response) => {
+    const data = await response.json();
     if (response.status === 401) {
       alert("パスワードが違います");
       return null;
-    } else if (!response.ok) {
+    }
+    if (!response.ok) {
       alert("ログイン中にエラーが発生しました。");
-      console.error("Error: ", response.status, await response.json());
+      console.error("Error: ", response.status, data);
       return null;
     }
+    if (data["type"] !== "c") {
+      alert(`このページはc専用です。${data["user"]}-${data["type"]}ではログインできません。`);
+      return;
+    }
 
-    const data = await response.json();
     console.log(data);
     isLogin = true;
     auth_key = data["token"];
@@ -332,6 +347,8 @@ function login() {
 
     const checkInterval = () => {
       check().then((ret) => {
+        setTimeout(() => {if (isLogin) {checkInterval();}}, 1000);
+        if (ret == null) return;
         let update_count = 0;
         for (const key in ret) {
           const order_id = ret[key]["order_id"];
@@ -370,12 +387,12 @@ function login() {
             }
           }
         }
-        if (body) changeStatusMulti(body);
-
-        setTimeout(() => {if (isLogin) {checkInterval();}}, 1000);
+        if (body.length > 0) changeStatusMulti(body);
       }).catch((error) => {
         console.error(error);
         alert("リクエストエラーが発生しました。");
+        setOnlineStatus(false);
+        return;
       });
     };
 
@@ -400,6 +417,7 @@ function login() {
         renderBoxes();
       } else {
         console.error("Error:", await response.text());
+        alert("ログイン中にエラーが発生しました。");
         return;
       }
     });
@@ -421,9 +439,11 @@ function check() {
     },
   }).then(async (response) => {
     if (response.status === 200) {
+      setOnlineStatus(true);
       return await response.json();
     } else {
       console.error("Error:", await response.text());
+      setOnlineStatus(false);
       return null;
     }
   });
