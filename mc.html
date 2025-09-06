@@ -280,17 +280,18 @@ function changeStatusMulti(body){
 
 function calculateNextCall(now_id = 0) {
   let now_call_count = 0;
+  let i = 0;
   for (let order_id in allOrdersData) {
     const order = allOrdersData[order_id];
     if (order.status === "呼び出し中" || order.status === "調理待ち") {
       if (order_id === now_id) continue;
       now_call_count += order.order_items["item_1"] || 0
       now_call_count += order.order_items["item_2"] || 0
+      i++;
     }
   }
 
   const body = [];
-  let i = 0;
   for (let order_id in allOrdersData) {
     const order = allOrdersData[order_id];
     if (now_call_count >= 20 && i >= 5) break;
