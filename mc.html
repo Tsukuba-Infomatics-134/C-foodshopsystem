@@ -292,7 +292,6 @@ function calculateNextCall(now_id = 0) {
   const body = [];
   let i = 0;
   for (let order_id in allOrdersData) {
-    i++;
     const order = allOrdersData[order_id];
     if (now_call_count >= 20 && i >= 5) break;
     if (order.status == "呼び出し待ち") {
@@ -301,6 +300,7 @@ function calculateNextCall(now_id = 0) {
         status: "呼び出し中",
         message: null
       });
+      i++;
       now_call_count += order.order_items["item_1"] || 0
       now_call_count += order.order_items["item_2"] || 0
     }
