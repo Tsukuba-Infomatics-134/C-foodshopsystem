@@ -134,6 +134,14 @@ const itemNames = {
   5: {item_1: "コンソメ", item_2: "バター醤油"},
   6: {item_1: "たこ", item_2: "明太もちチーズ"},
 }
+const callLimits = {
+  1: 10,
+  2: 15,
+  3: 20,
+  4: 20,
+  5: 20,
+  6: 20
+}
 
 const allOrdersData = {}
 let classNumber = 1;
@@ -294,7 +302,7 @@ function calculateNextCall(now_id = 0) {
   const body = [];
   for (let order_id in allOrdersData) {
     const order = allOrdersData[order_id];
-    if (now_call_count >= 20 && i >= 5) break;
+    if (now_call_count >= callLimits[classNumber] && i >= 5) break;
     if (order.status == "呼び出し待ち") {
       body.push({
         order_id: order_id,
